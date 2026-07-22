@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tool": {
+      "type": "string"
+    },
+    "fromChainId": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "toChainId": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "fromToken": {
+      "type": "string"
+    },
+    "toToken": {
+      "type": "string"
+    },
+    "fromAmount": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "toAmount": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "toAmountMin": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "approvalAddress": {
+      "type": "string"
+    },
+    "executionDurationSec": {
+      "type": "number"
+    },
+    "transactionRequest": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "chainId": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "to",
+        "data",
+        "value",
+        "chainId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "tool",
+    "fromChainId",
+    "toChainId",
+    "fromToken",
+    "toToken",
+    "fromAmount",
+    "toAmount",
+    "toAmountMin",
+    "transactionRequest"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/bridge/schema/bridge-quote-output.json"
+}

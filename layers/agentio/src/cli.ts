@@ -6,6 +6,7 @@ import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
 import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
+import { bridge as bridgeExec, quote as bridgeQuote, status as bridgeStatus } from "../../bridge/src/api.ts";
 import { readFileSync } from "node:fs";
 
 type Handler = (args: string[]) => Promise<number>;
@@ -317,6 +318,74 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["slippage"] !== undefined && { slippageBps: Number(flags["slippage"]) }),
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
           ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
+    },
+  },
+  "bridge-quote": {
+    summary: "bridge-quote --from-chain <c> --to-chain <c> --from-token 0x.. --to-token 0x.. --amount <base> --address 0x..",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      return emit(
+        await bridgeQuote({
+          fromChain: flags["from-chain"] ?? "",
+          toChain: flags["to-chain"] ?? "",
+          fromToken: flags["from-token"] ?? "",
+          toToken: flags["to-token"] ?? "",
+          fromAmount: flags["amount"] ?? "0",
+          fromAddress: flags["address"] ?? "",
+          ...(flags["to-address"] !== undefined && { toAddress: flags["to-address"] }),
+          ...(flags["slippage"] !== undefined && { slippage: Number(flags["slippage"]) }),
+        }),
+      );
+    },
+  },
+  bridge: {
+    summary: "bridge --from-chain <c> --to-chain <c> --from-token 0x.. --to-token 0x.. --amount <base> [--wallet name] [--rpc url] [--wait]",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      const index = flags["index"] !== undefined ? Number(flags["index"]) : 0;
+      const wallet = flags["wallet"] ?? "main";
+      const passphrase = passphraseFrom(flags);
+      let from = flags["address"] ?? "";
+      if (!from) {
+        const { deriveEvmAddress } = await import("../../keys/src/derive.ts");
+        const { unlockMnemonic } = await import("../../keys/src/wallet.ts");
+        try {
+          from = deriveEvmAddress(await unlockMnemonic(wallet, passphrase), index).address;
+        } catch {
+          from = "";
+        }
+      }
+      return emit(
+        await bridgeExec({
+          fromChain: flags["from-chain"] ?? "",
+          toChain: flags["to-chain"] ?? "",
+          fromToken: flags["from-token"] ?? "",
+          toToken: flags["to-token"] ?? "",
+          fromAmount: flags["amount"] ?? "0",
+          fromAddress: from,
+          wallet,
+          passphrase,
+          index,
+          ...(flags["to-address"] !== undefined && { toAddress: flags["to-address"] }),
+          ...(flags["slippage"] !== undefined && { slippage: Number(flags["slippage"]) }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
+    },
+  },
+  "bridge-status": {
+    summary: "bridge-status <sourceTxHash> [--from-chain c] [--to-chain c] [--tool name]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await bridgeStatus({
+          txHash: rest[0] ?? "",
+          ...(flags["from-chain"] !== undefined && { fromChain: flags["from-chain"] }),
+          ...(flags["to-chain"] !== undefined && { toChain: flags["to-chain"] }),
+          ...(flags["tool"] !== undefined && { tool: flags["tool"] }),
         }),
       );
     },

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "NOT_FOUND",
+        "PENDING",
+        "DONE",
+        "FAILED",
+        "INVALID"
+      ]
+    },
+    "substatus": {
+      "type": "string"
+    },
+    "substatusMessage": {
+      "type": "string"
+    },
+    "sendingTxHash": {
+      "type": "string"
+    },
+    "receivingTxHash": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/bridge/schema/bridge-status-output.json"
+}
