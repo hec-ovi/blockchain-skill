@@ -7,6 +7,7 @@ import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
 import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
 import { bridge as bridgeExec, quote as bridgeQuote, status as bridgeStatus } from "../../bridge/src/api.ts";
+import { faucet as faucetFund } from "../../faucet/src/api.ts";
 import { readFileSync } from "node:fs";
 
 type Handler = (args: string[]) => Promise<number>;
@@ -394,6 +395,29 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["from-chain"] !== undefined && { fromChain: flags["from-chain"] }),
           ...(flags["to-chain"] !== undefined && { toChain: flags["to-chain"] }),
           ...(flags["tool"] !== undefined && { tool: flags["tool"] }),
+        }),
+      );
+    },
+  },
+  faucet: {
+    summary: "faucet --network base-sepolia|sepolia [--token eth|usdc] [--address 0x.. | --wallet name] (loads free testnet credits, needs a free CDP key)",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      let address = flags["address"] ?? "";
+      if (!address) {
+        const { deriveEvmAddress } = await import("../../keys/src/derive.ts");
+        const { unlockMnemonic } = await import("../../keys/src/wallet.ts");
+        try {
+          address = deriveEvmAddress(await unlockMnemonic(flags["wallet"] ?? "main", passphraseFrom(flags)), 0).address;
+        } catch {
+          address = "";
+        }
+      }
+      return emit(
+        await faucetFund({
+          address,
+          network: flags["network"] ?? "base-sepolia",
+          ...(flags["token"] !== undefined && { token: flags["token"] as never }),
         }),
       );
     },

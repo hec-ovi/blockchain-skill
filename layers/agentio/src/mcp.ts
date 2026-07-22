@@ -10,6 +10,7 @@ import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
 import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
 import { bridge as bridgeExec, quote as bridgeQuote, status as bridgeStatus } from "../../bridge/src/api.ts";
+import { faucet as faucetFund } from "../../faucet/src/api.ts";
 import { deriveEvmAddress } from "../../keys/src/derive.ts";
 import { unlockMnemonic } from "../../keys/src/wallet.ts";
 
@@ -227,6 +228,19 @@ export function buildServer(): McpServer {
     tool(async (a: any) => {
       const from = deriveEvmAddress(await unlockMnemonic(a.wallet, passphrase()), 0).address;
       return bridgeExec({ fromChain: a.fromChain, toChain: a.toChain, fromToken: a.fromToken, toToken: a.toToken, fromAmount: a.fromAmount, fromAddress: from, wallet: a.wallet, passphrase: passphrase(), wait: a.wait, ...(a.toAddress && { toAddress: a.toAddress }), ...(a.slippage !== undefined && { slippage: a.slippage }), ...(a.rpc && { rpc: a.rpc }) });
+    }),
+  );
+
+  server.registerTool(
+    "faucet",
+    {
+      description: "Load FREE test credits into a wallet address on a public testnet (Base Sepolia or Ethereum Sepolia), headlessly. Use to fund a fresh wallet with gas so it can send transactions and deploy contracts. Requires a free Coinbase CDP API key in the environment. Testnet only; returns a real funding transaction with a block-explorer link. The address defaults to the wallet's own EVM address.",
+      inputSchema: { network: z.enum(["base-sepolia", "ethereum-sepolia", "sepolia"]).default("base-sepolia"), token: z.enum(["eth", "usdc", "eurc", "cbbtc"]).default("eth"), address: z.string().optional().describe("Address to fund; defaults to the wallet's EVM address"), wallet: z.string().default("main") },
+    },
+    tool(async (a: any) => {
+      let address = a.address;
+      if (!address) address = deriveEvmAddress(await unlockMnemonic(a.wallet, passphrase()), 0).address;
+      return faucetFund({ address, network: a.network, token: a.token });
     }),
   );
 

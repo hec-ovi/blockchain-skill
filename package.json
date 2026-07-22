@@ -37,6 +37,7 @@
     "ai-agents"
   ],
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.54.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@scure/bip32": "^2.0.0",
     "@scure/bip39": "^2.0.0",
