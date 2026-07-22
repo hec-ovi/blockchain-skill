@@ -4,6 +4,8 @@ import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
+import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
+import { readFileSync } from "node:fs";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -195,6 +197,71 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           address: rest[1] ?? "",
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
           ...(flags["verified-only"] !== undefined && { verifiedOnly: true }),
+        }),
+      );
+    },
+  },
+  "contract-compile": {
+    summary: "contract-compile --source <file.sol> [--name Contract]",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      const source = flags["source"] ? readFileSync(flags["source"], "utf8") : "";
+      return emit(await contractCompile(source, flags["source"]?.split("/").pop() ?? "Contract.sol", flags["name"]));
+    },
+  },
+  "contract-deploy": {
+    summary: "contract-deploy <chain> --source <file.sol> [--name C] [--args a,b] [--wallet name] [--rpc url]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      const source = flags["source"] ? readFileSync(flags["source"], "utf8") : undefined;
+      const ctorArgs = flags["args"] ? flags["args"].split(",").map((s) => s.trim()) : [];
+      return emit(
+        await contractDeploy({
+          wallet: flags["wallet"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          chain: rest[0] ?? "",
+          ...(source !== undefined && { source }),
+          ...(flags["name"] !== undefined && { contractName: flags["name"] }),
+          constructorArgs: ctorArgs,
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  "contract-call": {
+    summary: "contract-call <chain> <address> --fn name [--args a,b] --abi <file.json> [--rpc url]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      const abi = flags["abi"] ? JSON.parse(readFileSync(flags["abi"], "utf8")) : [];
+      return emit(
+        await contractCall({
+          chain: rest[0] ?? "ethereum",
+          address: rest[1] ?? "",
+          abi,
+          function: flags["fn"] ?? "",
+          ...(flags["args"] !== undefined && { args: flags["args"].split(",").map((s) => s.trim()) }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  "contract-write": {
+    summary: "contract-write <chain> <address> --fn name [--args a,b] --abi <file.json> [--wallet name] [--rpc url] [--wait]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      const abi = flags["abi"] ? JSON.parse(readFileSync(flags["abi"], "utf8")) : [];
+      return emit(
+        await contractWrite({
+          wallet: flags["wallet"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          chain: rest[0] ?? "",
+          address: rest[1] ?? "",
+          abi,
+          function: flags["fn"] ?? "",
+          ...(flags["args"] !== undefined && { args: flags["args"].split(",").map((s) => s.trim()) }),
+          ...(flags["value"] !== undefined && { valueWei: flags["value"] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
         }),
       );
     },

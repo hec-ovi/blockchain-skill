@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "function": {
+      "type": "string"
+    },
+    "result": {}
+  },
+  "required": [
+    "function",
+    "result"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/contracts/schema/call-output.json"
+}

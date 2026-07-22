@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "contractName": {
+        "type": "string"
+      },
+      "abi": {
+        "type": "array",
+        "items": {}
+      },
+      "bytecode": {
+        "type": "string",
+        "pattern": "^0x[0-9a-fA-F]*$"
+      },
+      "deployedBytecode": {
+        "type": "string",
+        "pattern": "^0x[0-9a-fA-F]*$"
+      },
+      "compilerVersion": {
+        "type": "string"
+      },
+      "sourceName": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "contractName",
+      "abi",
+      "bytecode",
+      "deployedBytecode",
+      "compilerVersion",
+      "sourceName"
+    ],
+    "additionalProperties": false
+  },
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/contracts/schema/compiled-output.json"
+}

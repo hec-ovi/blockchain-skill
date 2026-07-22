@@ -43,6 +43,7 @@
     "@scure/btc-signer": "^2.0.0",
     "@shazow/whatsabi": "^0.27.0",
     "ethereum-cryptography": "^3.2.0",
+    "solc": "^0.8.36",
     "viem": "^2.55.0",
     "zod": "^4.0.0"
   },
