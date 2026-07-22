@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { createWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
 import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
+import { send } from "../../send/src/api.ts";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -146,6 +147,28 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
     run: async (args) => {
       const { flags, rest } = parseFlags(args);
       return emit(await fees({ chain: rest[0] ?? "ethereum", ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }) }));
+    },
+  },
+  send: {
+    summary: "send <chain> --to <addr> --amount <display-units> [--amount-raw base|all] [--token 0x..] [--wallet name] [--fee-rate satvb] [--rpc url] [--wait]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await send({
+          wallet: flags["wallet"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          chain: rest[0] ?? "",
+          to: flags["to"] ?? "",
+          ...(flags["amount"] !== undefined && { amount: flags["amount"] }),
+          ...(flags["amount-raw"] !== undefined && { amountRaw: flags["amount-raw"] as never }),
+          ...(flags["token"] !== undefined && { token: flags["token"] }),
+          ...(flags["index"] !== undefined && { index: Number(flags["index"]) }),
+          ...(flags["type"] !== undefined && { addressType: flags["type"] as never }),
+          ...(flags["fee-rate"] !== undefined && { feeRateSatVb: Number(flags["fee-rate"]) }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
     },
   },
   tx: {

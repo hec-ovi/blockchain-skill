@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "evm"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{64}$"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "valueWei": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "nonce": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "broadcast",
+            "confirmed",
+            "reverted"
+          ]
+        },
+        "blockNumber": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "gasUsed": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "explorer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "hash",
+        "from",
+        "to",
+        "valueWei",
+        "nonce",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "btc"
+        },
+        "txid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "amountSats": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "feeSats": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "changeSats": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "vsize": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "feeRateSatVb": {
+          "type": "number",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "const": "broadcast"
+        },
+        "hint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "txid",
+        "from",
+        "to",
+        "amountSats",
+        "feeSats",
+        "changeSats",
+        "vsize",
+        "feeRateSatVb",
+        "status",
+        "hint"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/send/schema/send-output.json"
+}

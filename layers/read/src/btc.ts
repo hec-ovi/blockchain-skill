@@ -59,13 +59,16 @@ export interface BtcUtxo {
 export async function btcUtxos(info: BtcChainInfo, address: string, fetchFn?: FetchLike): Promise<BtcUtxo[]> {
   if (useBitcoind(info)) {
     const scan = (await bitcoindCall(info, "scantxoutset", ["start", [`addr(${address})`]])) as {
-      unspents: Array<{ txid: string; vout: number; amount: number; height: number }>;
+      height: number;
+      unspents: Array<{ txid: string; vout: number; amount: number; height: number; coinbase?: boolean }>;
     };
+    // Coinbase outputs are consensus-unspendable until 100 confirmations deep.
+    const matureBelow = scan.height - 99;
     return scan.unspents.map((u) => ({
       txid: u.txid,
       vout: u.vout,
       valueSats: BigInt(Math.round(u.amount * 1e8)).toString(),
-      confirmed: u.height > 0,
+      confirmed: u.height > 0 && (!u.coinbase || u.height <= matureBelow),
       height: u.height,
     }));
   }
