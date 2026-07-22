@@ -3,6 +3,7 @@ import { createWallet, getAddresses, importWallet, listWallets } from "../../key
 import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
+import { learnContract } from "../../learn/src/api.ts";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -180,6 +181,20 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           chain: rest[0] ?? "ethereum",
           ...(rest[1] !== undefined && { ref: rest[1] }),
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  "contract-learn": {
+    summary: "contract-learn <chain> <address> [--rpc url] [--verified-only]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await learnContract({
+          chain: rest[0] ?? "ethereum",
+          address: rest[1] ?? "",
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["verified-only"] !== undefined && { verifiedOnly: true }),
         }),
       );
     },
