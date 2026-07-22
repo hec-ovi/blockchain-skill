@@ -39,4 +39,4 @@ None.
 
 ## How to modify this blackbox safely
 
-New signable artifact types (e.g. PSBT export instead of finalized hex) are additive outputs. Never lower the dust threshold or widen the fee-rate range silently; both are contract values. The regtest e2e in the send layer is the ground truth that signatures verify; keep it green after any change here.
+New signable artifact types (e.g. PSBT export instead of finalized hex) are additive outputs. Never lower the dust threshold or widen the fee-rate range silently; both are contract values. The BTC signing tests (offline PSBT decode) and the real-testnet send e2e are the ground truth that signatures verify; keep them green after any change here.

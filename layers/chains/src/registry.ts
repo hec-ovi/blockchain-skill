@@ -5,7 +5,7 @@ import type { Chain } from "viem";
 import { CodedError } from "../../core/src/envelope.ts";
 import { walletHome } from "../../core/src/home.ts";
 
-export type BtcNetworkName = "bitcoin" | "signet" | "testnet" | "regtest";
+export type BtcNetworkName = "bitcoin" | "signet" | "testnet";
 
 export interface EvmChainInfo {
   family: "evm";
@@ -24,7 +24,6 @@ export interface BtcChainInfo {
   network: BtcNetworkName;
   name: string;
   esploraUrls: string[];
-  bitcoindRpc?: string;
   testnet: boolean;
   source: "builtin";
 }
@@ -56,18 +55,9 @@ export const BTC_CHAINS: Record<BtcNetworkName, BtcChainInfo> = {
     testnet: true,
     source: "builtin",
   },
-  regtest: {
-    family: "btc",
-    network: "regtest",
-    name: "Bitcoin Regtest",
-    esploraUrls: [],
-    bitcoindRpc: "http://127.0.0.1:18443",
-    testnet: true,
-    source: "builtin",
-  },
 };
 
-const ALIASES: Record<string, number> = { eth: 1, ethereum: 1, mainnet: 1, anvil: 31337, local: 31337 };
+const ALIASES: Record<string, number> = { eth: 1, ethereum: 1, mainnet: 1 };
 
 /** Keyless-usable http(s) URLs only: drop websockets and ${API_KEY} templates. */
 function usableRpcs(urls: string[]): string[] {
@@ -75,7 +65,12 @@ function usableRpcs(urls: string[]): string[] {
 }
 
 function isTestnetName(name: string): boolean {
-  return /test|sepolia|goerli|holesky|hoodi|devnet|anvil|localhost|foundry|hardhat/i.test(name);
+  return /test|sepolia|goerli|holesky|hoodi|devnet/i.test(name);
+}
+
+/** Local dev nodes are out of scope: this toolkit only operates on real public networks. */
+function isLocalDevChain(id: number, name: string): boolean {
+  return id === 31337 || id === 1337 || /anvil|localhost|foundry|hardhat/i.test(name);
 }
 
 function fromViem(c: Chain): EvmChainInfo {
@@ -160,6 +155,7 @@ function indexViem() {
   for (const [key, value] of Object.entries(viemChains)) {
     const c = value as Chain;
     if (typeof c !== "object" || c === null || typeof c.id !== "number" || !c.rpcUrls) continue;
+    if (isLocalDevChain(c.id, c.name)) continue; // real public networks only
     if (!byId.has(c.id)) byId.set(c.id, c);
     byName.set(key.toLowerCase(), c);
     byName.set(c.name.toLowerCase(), c);
@@ -196,7 +192,7 @@ export async function resolveChain(ref: string | number, fetchFn: FetchLike = fe
     throw new CodedError(
       "CHAIN_UNKNOWN",
       `cannot resolve chain "${ref}"`,
-      "Use a numeric chain id, a name like sepolia or base, or bitcoin/signet/regtest; see chainlist.org for ids",
+      "Use a numeric chain id, a name like sepolia or base, or bitcoin/signet/testnet; see chainlist.org for ids",
     );
   }
   const info = fromRegistry(entry);

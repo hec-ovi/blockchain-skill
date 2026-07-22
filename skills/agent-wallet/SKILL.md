@@ -24,7 +24,7 @@ One toolkit, three faces over the same engine: a CLI (`agent-wallet <verb>`), an
 
 ## Chain references
 
-Any chain works: a name (`ethereum`, `base`, `sepolia`), a numeric id (`8453`), or a Bitcoin network (`bitcoin`, `signet`, `testnet`, `regtest`). Amounts are decimal strings in base units (wei/sats) unless a verb takes display units.
+Any chain works: a name (`ethereum`, `base`, `sepolia`), a numeric id (`8453`), or a Bitcoin network (`bitcoin`, `signet`, `testnet`). Amounts are decimal strings in base units (wei/sats) unless a verb takes display units.
 
 Every balance, read, send, or contract call is scoped to ONE network. The same address holds different funds on each chain. If the user has not named a network, ask which one; never default to mainnet silently. State the network in your answer.
 

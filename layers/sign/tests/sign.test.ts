@@ -9,7 +9,7 @@ import { btcTxSign, evmMessageSign, evmTxSign, evmTypedDataSign } from "../src/a
 import { btcSignedOutput, evmSignatureOutput, evmSignedOutput } from "../src/contract.ts";
 
 const MNEMONIC = "test test test test test test test test test test test junk";
-const ANVIL0 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const DEV_ADDR0 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 const PASS = "sign-test-pass";
 const FAST = { n: 1024, p: 1, r: 8 };
 const TXID = "b".repeat(64);
@@ -30,7 +30,7 @@ describe("EVM signing (offline, verifiable)", () => {
     const env = await evmTxSign({
       wallet: "w",
       passphrase: PASS,
-      chainId: 31337,
+      chainId: 11155111,
       to: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
       valueWei: "1230000000000000000",
       nonce: 0,
@@ -40,10 +40,10 @@ describe("EVM signing (offline, verifiable)", () => {
     });
     expect(env.ok).toBe(true);
     const data = evmSignedOutput.parse(env.data);
-    expect(data.from).toBe(ANVIL0);
+    expect(data.from).toBe(DEV_ADDR0);
     const parsed = parseTransaction(data.rawTx as `0x${string}`);
-    expect(parsed).toMatchObject({ chainId: 31337, nonce: 0, gas: 21000n, value: 1230000000000000000n });
-    expect(await recoverTransactionAddress({ serializedTransaction: data.rawTx as any })).toBe(ANVIL0);
+    expect(parsed).toMatchObject({ chainId: 11155111, nonce: 0, gas: 21000n, value: 1230000000000000000n });
+    expect(await recoverTransactionAddress({ serializedTransaction: data.rawTx as any })).toBe(DEV_ADDR0);
   });
 
   it("signs messages and EIP-712 typed data that verify", async () => {
@@ -55,7 +55,7 @@ describe("EVM signing (offline, verifiable)", () => {
       domain: { name: "AgentWallet", version: "1", chainId: 1 },
       types: { Claim: [{ name: "owner", type: "address" }] },
       primaryType: "Claim",
-      message: { owner: ANVIL0 },
+      message: { owner: DEV_ADDR0 },
     };
     const t = await evmTypedDataSign("w", PASS, 0, JSON.stringify(typed));
     const tSig = evmSignatureOutput.parse(t.data);
@@ -65,18 +65,18 @@ describe("EVM signing (offline, verifiable)", () => {
   it("fails closed: empty tx, bad value, wrong passphrase", async () => {
     const base = { wallet: "w", passphrase: PASS, chainId: 1, nonce: 0, gasLimit: "21000", maxFeePerGas: "1", maxPriorityFeePerGas: "1" };
     expect((await evmTxSign(base)).error?.code).toBe("TX_EMPTY");
-    expect((await evmTxSign({ ...base, to: ANVIL0, valueWei: "1.5" })).error?.code).toBe("AMOUNT_INVALID");
+    expect((await evmTxSign({ ...base, to: DEV_ADDR0, valueWei: "1.5" })).error?.code).toBe("AMOUNT_INVALID");
     expect((await evmTxSign({ ...base, to: "0xdead" })).error?.code).toBe("ADDRESS_INVALID");
-    expect((await evmTxSign({ ...base, to: ANVIL0, passphrase: "wrong-pass" })).error?.code).toBe("PASSPHRASE_WRONG");
+    expect((await evmTxSign({ ...base, to: DEV_ADDR0, passphrase: "wrong-pass" })).error?.code).toBe("PASSPHRASE_WRONG");
     expect((await evmTypedDataSign("w", PASS, 0, "{}")).error?.code).toBe("TYPED_DATA_INVALID");
   });
 });
 
 describe("BTC signing (offline, decodable)", () => {
   const utxo = (valueSats: string, vout = 0, confirmed = true) => ({ txid: TXID, vout, valueSats, confirmed });
-  const base = { wallet: "w", passphrase: PASS, network: "regtest" as const, feeRateSatVb: 2 };
-  // A foreign regtest address (not derived from our wallet) as recipient.
-  const DEST = btc.p2wpkh(new Uint8Array(33).fill(2), { ...btc.TEST_NETWORK, bech32: "bcrt" }).address!;
+  const base = { wallet: "w", passphrase: PASS, network: "signet" as const, feeRateSatVb: 2 };
+  // A foreign signet/testnet address (not derived from our wallet) as recipient.
+  const DEST = btc.p2wpkh(new Uint8Array(33).fill(2), btc.TEST_NETWORK).address!;
 
   it("signs a taproot spend with change; decodes to the expected outputs", async () => {
     const env = await btcTxSign({ ...base, to: DEST, amountSats: "30000", utxos: [utxo("100000")] });

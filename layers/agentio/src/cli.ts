@@ -122,7 +122,7 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
     },
   },
   "chain-resolve": {
-    summary: "Resolve a chain ref (name, id, bitcoin/signet/regtest) to endpoints",
+    summary: "Resolve a chain ref (name, id, bitcoin/signet/testnet) to endpoints",
     run: async (args) => {
       const { rest } = parseFlags(args);
       return emit(await chainResolve(rest[0] ?? "ethereum"));

@@ -42,4 +42,4 @@ None.
 
 ## How to modify this blackbox safely
 
-New derivation families (e.g. another purpose path) are additive: extend the enums in `src/contract.ts`, bump minor here, run `npm run schemas`. Never change existing paths or keystore semantics in place; a wallet written by version N must decrypt under N+1. Test with the fast scrypt params, keep the BIP-86 and anvil-account-0 vectors green.
+New derivation families (e.g. another purpose path) are additive: extend the enums in `src/contract.ts`, bump minor here, run `npm run schemas`. Never change existing paths or keystore semantics in place; a wallet written by version N must decrypt under N+1. Test with the fast scrypt params, keep the BIP-86, BIP-84, and dev-mnemonic vectors green.

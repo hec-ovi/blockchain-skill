@@ -15,8 +15,9 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Compiling, deploying, verifying, calling contracts | `layers/contracts/` |
 | Swap quotes and execution, aggregator adapters | `layers/swap/` |
 | Cross-chain bridging | `layers/bridge/` |
+| Self-serve testnet funding (CDP faucet) | `layers/faucet/` |
 | CLI verbs, MCP tools, output formatting | `layers/agentio/` |
 | Agent-facing skills (SKILL.md, references) | `skills/<operation>/` |
 | Packaging, manifests, install routes | repo root + `.claude-plugin/` |
 
-Build status: architecture proposed, layers not yet scaffolded. This table is the contract for where things will live; update it the moment a layer lands or moves.
+Build status: all layers shipped and tested. This table is the contract for where things live; update it the moment a layer lands or moves.

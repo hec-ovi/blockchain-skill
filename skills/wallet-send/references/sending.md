@@ -13,7 +13,7 @@
 
 ## Bitcoin
 
-- Only confirmed UTXOs are spent. Coinbase outputs on regtest are unspendable until 100 confirmations.
+- Only confirmed UTXOs are spent.
 - Coin selection is largest-first; change returns to the sender's own address. Change below the 546-sat dust threshold folds into the fee.
 - Fee rate defaults to the half-hour estimate; override with `--fee-rate <sat/vB>`.
 - Taproot (p2tr) is the default address type; pass `--type p2wpkh` to spend from native segwit.

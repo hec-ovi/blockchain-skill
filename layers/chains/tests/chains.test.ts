@@ -44,17 +44,23 @@ describe("chain resolution (offline)", () => {
     const sepolia = await resolveChain("sepolia", neverFetch);
     expect(sepolia.family === "evm" && sepolia.chainId).toBe(11155111);
     expect(sepolia.testnet).toBe(true);
-    const anvil = await resolveChain("anvil", neverFetch);
-    expect(anvil.family === "evm" && anvil.chainId).toBe(31337);
-    expect(anvil.testnet).toBe(true);
+    const base = await resolveChain("base sepolia", neverFetch);
+    expect(base.family === "evm" && base.chainId).toBe(84532);
+    expect(base.testnet).toBe(true);
     expect((await resolveChain("ethereum", neverFetch)).testnet).toBe(false);
   });
 
-  it("resolves the four Bitcoin networks builtin", async () => {
+  it("does not resolve local dev chains (real public networks only)", async () => {
+    for (const ref of ["anvil", "localhost", "foundry", "hardhat", 31337, 1337]) {
+      await expect(resolveChain(ref, neverFetch)).rejects.toThrowError(/CHAIN_UNKNOWN|network access attempted/);
+    }
+  });
+
+  it("resolves the three Bitcoin networks builtin", async () => {
     const signet = await resolveChain("signet", neverFetch);
     expect(signet).toMatchObject({ family: "btc", network: "signet", testnet: true });
-    const regtest = await resolveChain("regtest", neverFetch);
-    expect(regtest.family === "btc" && regtest.bitcoindRpc).toContain("18443");
+    const testnet = await resolveChain("testnet", neverFetch);
+    expect(testnet.family === "btc" && testnet.esploraUrls[0]).toContain("testnet4");
     const mainnet = await resolveChain("bitcoin", neverFetch);
     expect(mainnet.family === "btc" && mainnet.esploraUrls[0]).toContain("mempool.space");
   });
@@ -112,9 +118,9 @@ describe("viem chain construction and esplora fallback", () => {
   it("builds a viem chain with rpc override first", async () => {
     const info = await resolveChain("sepolia", neverFetch);
     if (info.family !== "evm") throw new Error("expected evm");
-    const chain = toViemChain(info, "http://127.0.0.1:8545");
+    const chain = toViemChain(info, "https://my-rpc.example");
     expect(chain.id).toBe(11155111);
-    expect(chain.rpcUrls.default.http[0]).toBe("http://127.0.0.1:8545");
+    expect(chain.rpcUrls.default.http[0]).toBe("https://my-rpc.example");
   });
 
   it("esploraGet falls through failing endpoints and reports the last error", async () => {
@@ -127,11 +133,5 @@ describe("viem chain construction and esplora fallback", () => {
     };
     expect(await esploraGet(info, "/blocks/tip/height", flaky)).toBe(900001);
     expect(calls).toBe(2);
-  });
-
-  it("regtest without esplora steers to bitcoind", async () => {
-    const env = await chainCheck("regtest", undefined, neverFetch);
-    expect(env.error?.code).toBe("BITCOIND_REQUIRED");
-    expect(env.error?.hint).toContain("bitcoind");
   });
 });

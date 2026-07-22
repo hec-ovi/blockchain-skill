@@ -43,4 +43,4 @@ None.
 
 ## How to modify this blackbox safely
 
-A Foundry-project compile path can be added alongside the solc-js one (additive). Keep call read-only and write gated; never let write skip `decide`. The anvil e2e (compile a counter, deploy, read, increment, re-read) is the ground truth; keep it green.
+A Foundry-project compile path can be added alongside the solc-js one (additive). Keep call read-only and write gated; never let write skip `decide`. The Base Sepolia e2e (compile a counter, deploy, read, increment, re-read) is the ground truth; keep it green.

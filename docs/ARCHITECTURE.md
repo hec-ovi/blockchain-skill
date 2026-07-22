@@ -8,7 +8,7 @@ Working name: `agent-wallet` (CLI bin, plugin name, MCP registry `io.github.hec-
 
 - Non-custodial, barehand: keys are generated locally, stored only as a passphrase-encrypted keystore v3 file (mode 0600), and signing happens in-process. Broadcast goes straight to public RPC / Esplora endpoints. No MetaMask, no exchange, no hosted signer.
 - Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, 1inch, LI.FI key) are optional accelerators, never requirements.
-- Chain-agnostic: EVM chains resolve from viem/chains + chainid.network (2658 chains) via defineChain; Bitcoin ships mainnet/signet/regtest. New chain families are new adapters, not rewrites.
+- Chain-agnostic: EVM chains resolve from viem/chains + chainid.network (2658 chains) via defineChain; Bitcoin ships mainnet/signet/testnet4. New chain families are new adapters, not rewrites.
 - Fail closed: every value crossing a layer boundary is a schema-validated JSON envelope. A deterministic gate layer authorizes every state-changing operation before signing. Prompt text is never an enforcement mechanism.
 
 ## Layers (easy to hard, each a blackbox)
@@ -22,7 +22,7 @@ Each layer folder owns `CONTRACT.md`, `schema/`, `src/`, `tests/`, `fixtures/`, 
 | 2 | `layers/chains` | Resolve any chain (id, name, alias) to RPC endpoints, explorer, currency; viem fallback transport with ranking; Esplora endpoint selection for BTC | read |
 | 3 | `layers/read` | Balances (native + ERC-20), UTXOs, tx lookup/history, fee estimation, receive addresses | read |
 | 4 | `layers/sign` | Build + sign offline: EVM tx (EIP-1559), EIP-712 typed data, messages, BTC PSBT | none |
-| 5 | `layers/gate` | Deterministic policy: chain allowlist (default testnet/local only, mainnet is explicit opt-in), per-tx spend caps, dry-run required flags. Returns allow/deny + reason. Fail closed | none |
+| 5 | `layers/gate` | Deterministic policy: chain allowlist (default testnet only, mainnet is explicit opt-in), per-tx spend caps, dry-run required flags. Returns allow/deny + reason. Fail closed | none |
 | 6 | `layers/send` | Broadcast signed tx, nonce management, confirmation tracking, fee bump/replace | write |
 | 7 | `layers/learn` | Contract intelligence: verified source + ABI via Sourcify -> Blockscout -> Etherscan v2 (keyed, optional) -> WhatsABI for unverified; proxy resolution | read |
 | 8 | `layers/contracts` | Scaffold, compile (forge, solc-js fallback), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
@@ -50,7 +50,7 @@ Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` 
 
 - Keystore: mnemonic encrypted to Web3 Secret Storage v3 (scrypt) using ethereum-cryptography primitives; interops with `cast wallet import` and geth. Passphrase comes from `AGENT_WALLET_PASSPHRASE` env or interactive prompt; it is never written to disk or logs.
 - Data dir: `~/.agent-wallet/` (override `AGENT_WALLET_HOME`): `keystore/`, `state/` (multi-step flow files), `config.json` (gate policy, chain allowlist, optional API keys).
-- Gate defaults ship safe: local + testnets allowed, mainnet denied until the user flips `config.json`. Every sign/send/deploy/swap/bridge passes the gate first; deny returns the reason and the exact config change that would allow it.
+- Gate defaults ship safe: testnets allowed, mainnet denied until the user flips `config.json`. Every sign/send/deploy/swap/bridge passes the gate first; deny returns the reason and the exact config change that would allow it.
 - External content (RPC responses, fetched contract source) is untrusted data: schema-validated, never executed, fenced when surfaced to an agent.
 
 ## gbrain skills (context engineering)
@@ -78,17 +78,16 @@ Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
 
 ## Testing
 
-- Unit + contract tests per layer: schema round-trips validated against `schema/` exactly as shipped; external boundaries faked with fixtures; no network.
-- E2E per write-capable layer against local chains: anvil (fresh + forked) for EVM, bitcoind regtest for BTC. Runs with the project test command; live-testnet suites (Sepolia, signet, funded treasury) are opt-in behind an env flag.
-- Swap/bridge e2e: quotes recorded as fixtures for CI; execution tested on anvil forks (CoW settlement mocked at the API boundary, Uniswap router exercised for real on the fork).
-- Distribution test: manifest lockstep, skill copies in sync, CLI verbs exist, MCP tool list matches CLI.
+- Unit + contract tests per layer: schema round-trips validated against `schema/` exactly as shipped; external boundaries faked with fixtures; no network. This is the default `npm test`.
+- Real public-network suites are opt-in: `RUN_LIVE=1` for keyless reads and quotes (Sepolia, signet, Sourcify, CoW, Kyber, LI.FI), and a self-funding end-to-end suite on Base Sepolia that pulls gas from the faucet layer (needs a free CDP key). No local node is used anywhere.
+- Distribution test: manifest lockstep, skill descriptions, contract/schema links, no em/en dashes.
 
 ## Build order (one commit per step, pushed)
 
 1. Scaffold: package.json, tsconfig, test runner (vitest), layout, README stub.
 2. `core` (envelope + validation + errors + state store).
-3. `keys` (mnemonic, HD, keystore v3). 4. `chains`. 5. `read`. 6. `sign`. 7. `gate`. 8. `send` (first full e2e: create wallet, fund on anvil/regtest, send, confirm).
-9. `learn`. 10. `contracts` (second e2e: author, deploy, call, verify on anvil + Sepolia). 11. `swap`. 12. `bridge`.
+3. `keys` (mnemonic, HD, keystore v3). 4. `chains`. 5. `read`. 6. `sign`. 7. `gate`. 8. `send` (first full e2e: create wallet, fund via faucet, send on a public testnet, confirm).
+9. `learn`. 10. `contracts` (second e2e: author, deploy, call on Base Sepolia). 11. `swap`. 12. `bridge`.
 13. `agentio` (CLI grows per layer from step 2; MCP server formalized here).
 14. Skills + plugin + INDEX resolver. 15. Hardening: distribution tests, docs, repo surface.
 

@@ -39,4 +39,4 @@ None.
 
 ## How to modify this blackbox safely
 
-New aggregators are new adapters implementing `SwapAdapter` (additive). Keep every adapter keyless-by-default. Never let execute skip the gate. Quote parsing is fixture-tested; the execute path is proven on anvil against a deployed mock token+router; live quote tests sit behind `RUN_LIVE`.
+New aggregators are new adapters implementing `SwapAdapter` (additive). Keep every adapter keyless-by-default. Never let execute skip the gate. Quote parsing is fixture-tested and live quote tests sit behind `RUN_LIVE`; the execute path reuses the signed-tx machinery proven by the real-testnet send e2e.

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const walletName = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
-const btcNetwork = z.enum(["bitcoin", "signet", "testnet", "regtest"]);
+const btcNetwork = z.enum(["bitcoin", "signet", "testnet"]);
 const btcAddressType = z.enum(["p2tr", "p2wpkh"]);
 
 export const createWalletInput = z

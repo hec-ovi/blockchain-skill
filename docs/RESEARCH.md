@@ -14,10 +14,10 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 | Bitcoin data/broadcast | Esplora API: mempool.space primary, blockstream.info fallback | yes |
 | Swap (EVM) | CoW Protocol primary, KyberSwap fallback, Uniswap direct-to-router backstop | yes |
 | Bridge | LI.FI (optional free key raises limits) | yes |
-| Solidity toolchain | Foundry 1.7.x (forge, anvil); solc-js for in-process compile | yes |
+| Solidity toolchain | solc-js for in-process compile; Foundry forge for keyless verify | yes |
 | Contract verification | forge verify-contract: sourcify (default) and blockscout keyless, etherscan keyed | yes |
 | Contract intelligence | Sourcify APIv2, Blockscout, Etherscan v2 (keyed), WhatsABI for unverified | mostly |
-| E2E testing | anvil + bitcoind regtest; staging on Sepolia + signet | yes |
+| E2E testing | real public testnets (Base Sepolia, Sepolia, signet), gas self-funded via the CDP faucet | yes |
 | MCP server | @modelcontextprotocol/sdk 1.29.0, stdio, zod schemas | yes |
 
 ## 1. Keys and signing
@@ -53,7 +53,7 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 
 ## 5. Solidity toolchain
 
-- Foundry v1.7.1 stable (2026-05-08), 1.0 since Feb 2025, stable releases every 1-2 months, nightlies daily. Single static binary via foundryup (Linux/macOS; Windows needs Git Bash or WSL). forge auto-manages solc versions. anvil: in-memory node, 10 prefunded accounts, forked-mainnet mode. Primary toolchain.
+- Foundry v1.7.1 stable (2026-05-08), 1.0 since Feb 2025, stable releases every 1-2 months, nightlies daily. Single static binary via foundryup (Linux/macOS; Windows needs Git Bash or WSL). forge auto-manages solc versions and drives keyless source verification. solc-js compiles in-process for deploy.
 - Hardhat 3.11.0 (viem-based toolbox, Rust EDR node) is credible but is a Node project framework, heavier to drive programmatically. Not picked.
 - solc npm (solc-js 0.8.36, tracks upstream) as the light in-process compile path, deploying via viem deployContract, at the cost of manual import/remapping handling.
 
@@ -67,7 +67,7 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 
 ## 7. Test environments
 
-- Fully headless: anvil (prefunded accounts, fork mode) and bitcoind regtest (generatetoaddress). This is the CI/e2e story. Bitcoin Core v31.0 current.
+- Headless funding is the key: the Coinbase CDP faucet (free API key) drips gas to any address on Base Sepolia and Ethereum Sepolia, so an agent self-funds and the e2e suite runs on real public networks. Bitcoin test faucets still need a human, so Bitcoin e2e stays read-only.
 - Ethereum testnets: Sepolia (11155111) live and default; its announced 2026-09-30 EOL slipped, successor unnamed (confidence medium on timing). Holesky is shut down. Hoodi (560048) is for staking, not app deploys. Etherscan v2 free tier, Sourcify, and Blockscout all cover Sepolia.
 - Bitcoin testnets: signet is the stable public choice; testnet4 suffers block storms and BIP-95 (testnet5) is drafted to replace it; blockstream.info serves only testnet3 publicly, mempool.space serves testnet4 and signet.
 - Faucets: nothing is cleanly headless in 2026 (PoW faucets need a browser session, Google Cloud faucet needs sign-in, signetfaucet.com drips with IP caps). Realistic pattern: fund a treasury wallet once manually; the toolkit self-funds child wallets from it.

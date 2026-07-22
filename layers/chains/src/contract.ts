@@ -19,10 +19,9 @@ export const evmChainInfo = z
 export const btcChainInfo = z
   .object({
     family: z.literal("btc"),
-    network: z.enum(["bitcoin", "signet", "testnet", "regtest"]),
+    network: z.enum(["bitcoin", "signet", "testnet"]),
     name: z.string().min(1),
     esploraUrls: z.array(z.string()),
-    bitcoindRpc: z.string().optional(),
     testnet: z.boolean(),
     source: z.literal("builtin"),
   })

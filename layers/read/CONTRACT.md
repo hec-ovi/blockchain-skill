@@ -25,7 +25,7 @@ None.
 
 ## Errors
 
-`ADDRESS_INVALID`, `HASH_INVALID`, `TXID_INVALID`, `TOKEN_READ_FAILED`, `FAMILY_MISMATCH`, `PARAM_MISSING`, plus pass-through of chains-layer errors (`CHAIN_UNKNOWN`, `ESPLORA_UNAVAILABLE`, `BITCOIND_REQUIRED`, `BITCOIND_ERROR`).
+`ADDRESS_INVALID`, `HASH_INVALID`, `TXID_INVALID`, `TOKEN_READ_FAILED`, `FAMILY_MISMATCH`, `PARAM_MISSING`, plus pass-through of chains-layer errors (`CHAIN_UNKNOWN`, `ESPLORA_UNAVAILABLE`).
 
 ## Dependencies
 
@@ -34,9 +34,9 @@ None.
 ## Invariants
 
 - Read-only: no signing, no broadcasting, no key material ever enters this layer.
-- Bitcoin backend selection is deterministic: Esplora when the network has esplora URLs, bitcoind JSON-RPC otherwise (regtest).
+- All Bitcoin reads go through public Esplora endpoints (mempool.space, blockstream.info).
 - All amounts cross the boundary as strings; bigint math internally.
 
 ## How to modify this blackbox safely
 
-New read verbs are additive schema entries + api functions (minor bump). Keep the string-amount invariant; anything returning floats for money is a bug. Unit tests use injected fetch; e2e runs against throwaway anvil/regtest nodes via `testkit/`.
+New read verbs are additive schema entries + api functions (minor bump). Keep the string-amount invariant; anything returning floats for money is a bug. Unit tests use injected fetch; the real-testnet e2e runs against public networks when a funded key is present.

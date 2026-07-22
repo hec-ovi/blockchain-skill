@@ -4,14 +4,13 @@ import { mnemonicToSeedSync } from "@scure/bip39";
 import { mnemonicToAccount } from "viem/accounts";
 import * as btc from "@scure/btc-signer";
 
-export type BtcNetworkName = "bitcoin" | "signet" | "testnet" | "regtest";
+export type BtcNetworkName = "bitcoin" | "signet" | "testnet";
 export type BtcAddressType = "p2tr" | "p2wpkh";
 
 export const BTC_NETWORKS: Record<BtcNetworkName, typeof btc.NETWORK> = {
   bitcoin: btc.NETWORK,
   signet: btc.TEST_NETWORK,
   testnet: btc.TEST_NETWORK,
-  regtest: { ...btc.TEST_NETWORK, bech32: "bcrt" },
 };
 
 export interface DerivedEvm {

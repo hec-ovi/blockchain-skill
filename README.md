@@ -45,7 +45,7 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 The toolkit was checked at three levels: an automated suite, live calls against real public networks, and a full run driven by a separate AI agent acting as a first-time user.
 
-**Automated suite.** `npm test` runs 110 tests with no external network: schema and contract tests for every layer, key derivation checked against the official BIP-86 and BIP-84 vectors, Bitcoin coin selection, envelope validation, and end-to-end runs of the real CLI and MCP server.
+**Automated suite.** `npm test` runs 95 tests with no external network: schema and contract tests for every layer, key derivation checked against the official BIP-86 and BIP-84 vectors, Bitcoin coin selection, envelope validation, and end-to-end runs of the real CLI and MCP server.
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): balance and tip reads on Ethereum Sepolia and Bitcoin signet, a keyless Sourcify ABI fetch for WETH, and live swap and bridge quotes from CoW, KyberSwap, and LI.FI.
 

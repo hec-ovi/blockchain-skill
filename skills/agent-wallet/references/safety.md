@@ -4,7 +4,7 @@ The gate is deterministic code that runs before anything is signed or broadcast.
 
 ## Defaults (no config file)
 
-- Testnets and local chains (anvil, regtest): allowed.
+- Testnets (Sepolia, Base Sepolia, Bitcoin signet): allowed.
 - Every mainnet (Ethereum, Bitcoin, Base, ...): denied.
 - No per-transaction cap.
 

@@ -38,7 +38,7 @@ function tool<A>(fn: (args: A) => Promise<{ ok: boolean }>) {
   };
 }
 
-const chainArg = z.string().describe('Chain reference: a name (ethereum, base, sepolia), numeric id (8453), or Bitcoin network (bitcoin, signet, testnet, regtest)');
+const chainArg = z.string().describe('Chain reference: a name (ethereum, base, sepolia), numeric id (8453), or Bitcoin network (bitcoin, signet, testnet)');
 const addressArg = z.string().describe("An address on the target chain");
 
 export function buildServer(): McpServer {
@@ -76,7 +76,7 @@ export function buildServer(): McpServer {
       inputSchema: {
         name: z.string().default("main"),
         family: z.enum(["evm", "btc"]).default("evm"),
-        network: z.enum(["bitcoin", "signet", "testnet", "regtest"]).optional().describe("Bitcoin network (btc family only)"),
+        network: z.enum(["bitcoin", "signet", "testnet"]).optional().describe("Bitcoin network (btc family only)"),
         addressType: z.enum(["p2tr", "p2wpkh"]).optional(),
         start: z.number().int().min(0).default(0),
         count: z.number().int().min(1).max(100).default(1),
@@ -108,7 +108,7 @@ export function buildServer(): McpServer {
 
   server.registerTool(
     "utxos",
-    { description: "List unspent outputs for a Bitcoin address (bitcoin/signet/testnet/regtest only).", inputSchema: { chain: z.enum(["bitcoin", "signet", "testnet", "regtest"]), address: addressArg } },
+    { description: "List unspent outputs for a Bitcoin address (bitcoin/signet/testnet only).", inputSchema: { chain: z.enum(["bitcoin", "signet", "testnet"]), address: addressArg } },
     tool(async (a: { chain: string; address: string }) => utxos({ chain: a.chain, address: a.address })),
   );
 

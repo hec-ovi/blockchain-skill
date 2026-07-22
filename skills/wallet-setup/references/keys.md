@@ -3,7 +3,7 @@
 ## Derivation paths
 
 - EVM: `m/44'/60'/0'/0/i` (secp256k1), address index `i`.
-- Bitcoin taproot (default): `m/86'/coin'/0'/0/i`, `coin` = 0 mainnet, 1 for signet/testnet/regtest.
+- Bitcoin taproot (default): `m/86'/coin'/0'/0/i`, `coin` = 0 mainnet, 1 for signet/testnet.
 - Bitcoin native segwit: `m/84'/coin'/0'/0/i`.
 
 Derivation matches the official BIP-86 and BIP-84 vectors, so addresses line up with any other standard wallet restored from the same seed.

@@ -33,8 +33,8 @@ None.
 - The gate decides before anything is signed; a denial costs zero network writes.
 - EVM balance pre-check covers worst-case value + gasLimit * maxFeePerGas; gas limit carries a 20 percent buffer over the node estimate.
 - BTC fee rate defaults to the half-hour estimate; sweep (`all`) sends total minus fee.
-- Broadcast is direct to public RPC/Esplora/bitcoind; no relayer, no third-party signer.
+- Broadcast is direct to public RPC and Esplora; no relayer, no third-party signer.
 
 ## How to modify this blackbox safely
 
-Fee-bumping/replacement and richer wait strategies are additive verbs. Never reorder gate after sign. Keep the anvil and regtest e2e green; they are the proof that a signed tx actually lands on both families.
+Fee-bumping/replacement and richer wait strategies are additive verbs. Never reorder gate after sign. Keep the real-testnet e2e green (it self-funds via the faucet layer); it is the proof that a signed tx actually lands.

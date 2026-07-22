@@ -9,9 +9,9 @@ import { addressListOutput, walletCreatedOutput, walletListOutput } from "../src
 import { envelopeShape } from "../../core/src/envelope.ts";
 
 const FAST = { n: 1024, p: 1, r: 8 };
-// The all-abandon BIP-39 test mnemonic with official BIP-86 vectors, and the anvil dev mnemonic.
+// The all-abandon BIP-39 test mnemonic with official BIP-86 vectors, and the standard dev mnemonic.
 const BIP86_MNEMONIC = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-const ANVIL_MNEMONIC = "test test test test test test test test test test test junk";
+const DEV_MNEMONIC = "test test test test test test test test test test test junk";
 
 let home: string;
 beforeEach(() => {
@@ -41,8 +41,8 @@ describe("keystore v3", () => {
 });
 
 describe("derivation vectors", () => {
-  it("EVM index 0 of the anvil mnemonic is anvil account 0", () => {
-    expect(deriveEvmAddress(ANVIL_MNEMONIC, 0).address).toBe("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+  it("EVM index 0 of the dev mnemonic matches its known address", () => {
+    expect(deriveEvmAddress(DEV_MNEMONIC, 0).address).toBe("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
   });
 
   it("BTC taproot matches the official BIP-86 vectors (index 0 and 1)", () => {
@@ -60,9 +60,9 @@ describe("derivation vectors", () => {
     expect(a.path).toBe("m/84'/0'/0'/0/0");
   });
 
-  it("signet and regtest use testnet coin type and their own prefixes", () => {
+  it("signet and testnet use testnet coin type and the tb1 prefix", () => {
     expect(deriveBtcAddress(BIP86_MNEMONIC, 0, "signet", "p2tr").address.startsWith("tb1p")).toBe(true);
-    expect(deriveBtcAddress(BIP86_MNEMONIC, 0, "regtest", "p2tr").address.startsWith("bcrt1p")).toBe(true);
+    expect(deriveBtcAddress(BIP86_MNEMONIC, 0, "testnet", "p2tr").address.startsWith("tb1p")).toBe(true);
     expect(deriveBtcAddress(BIP86_MNEMONIC, 0, "signet", "p2tr").path).toBe("m/86'/1'/0'/0/0");
   });
 });
@@ -89,10 +89,10 @@ describe("wallet end to end", () => {
   });
 
   it("imports a known mnemonic and derives the expected addresses", async () => {
-    const imported = await importWallet({ name: "anvil", passphrase: "hunter22hunter", mnemonic: ANVIL_MNEMONIC, scrypt: FAST });
+    const imported = await importWallet({ name: "imported", passphrase: "hunter22hunter", mnemonic: DEV_MNEMONIC, scrypt: FAST });
     expect(imported.ok).toBe(true);
-    const btc = await getAddresses({ name: "anvil", passphrase: "hunter22hunter", family: "btc", network: "regtest" });
-    expect(addressListOutput.parse(btc.data)[0]?.address.startsWith("bcrt1p")).toBe(true);
+    const btc = await getAddresses({ name: "imported", passphrase: "hunter22hunter", family: "btc", network: "testnet" });
+    expect(addressListOutput.parse(btc.data)[0]?.address.startsWith("tb1p")).toBe(true);
   });
 
   it("fails closed: duplicate name, bad mnemonic, wrong passphrase, bad name", async () => {

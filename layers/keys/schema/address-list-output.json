@@ -53,8 +53,7 @@
             "enum": [
               "bitcoin",
               "signet",
-              "testnet",
-              "regtest"
+              "testnet"
             ]
           },
           "addressType": {

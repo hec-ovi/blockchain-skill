@@ -37,7 +37,7 @@ export const btcSignInput = z
     wallet: z.string(),
     passphrase: z.string(),
     index: z.number().int().min(0).optional(),
-    network: z.enum(["bitcoin", "signet", "testnet", "regtest"]),
+    network: z.enum(["bitcoin", "signet", "testnet"]),
     addressType: z.enum(["p2tr", "p2wpkh"]).optional(),
     to: z.string(),
     amountSats: z.union([digits, z.literal("all")]),

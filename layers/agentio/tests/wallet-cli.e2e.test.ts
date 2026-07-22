@@ -49,11 +49,11 @@ describe("wallet verbs end to end (real CLI process)", () => {
     expect(addrs.env.data[0].address.startsWith("tb1p")).toBe(true);
   });
 
-  it("imports the anvil mnemonic and derives anvil account 0", () => {
+  it("imports a known dev mnemonic and derives its known address", () => {
     const imported = cli(
       "wallet-import",
       "--name",
-      "anvil",
+      "imported",
       "--mnemonic",
       "test test test test test test test test test test test junk",
     );

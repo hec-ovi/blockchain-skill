@@ -90,8 +90,7 @@
           "enum": [
             "bitcoin",
             "signet",
-            "testnet",
-            "regtest"
+            "testnet"
           ]
         },
         "name": {
@@ -103,9 +102,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "bitcoindRpc": {
-          "type": "string"
         },
         "testnet": {
           "type": "boolean"

@@ -26,7 +26,7 @@ Verification uses `forge` against a Foundry project directory. Sourcify (default
 
 ## Expect
 
-- Deploys to mainnet are DENIED by default; enable the chain in config first. Local (anvil) and testnets work immediately.
+- Deploys to mainnet are DENIED by default; enable the chain in config first. Testnets (Sepolia, Base Sepolia) work immediately.
 - A reverting constructor is caught at gas estimation (`GAS_ESTIMATE_FAILED`) before broadcast.
 - Compilation is deterministic (optimizer runs 200).
 
