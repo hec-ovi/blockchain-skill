@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import { createWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
+import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -102,6 +103,20 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["count"] !== undefined && { count: Number(flags["count"]) }),
         }),
       );
+    },
+  },
+  "chain-resolve": {
+    summary: "Resolve a chain ref (name, id, bitcoin/signet/regtest) to endpoints",
+    run: async (args) => {
+      const { rest } = parseFlags(args);
+      return emit(await chainResolve(rest[0] ?? "ethereum"));
+    },
+  },
+  "chain-check": {
+    summary: "Probe a chain's RPC/Esplora endpoints (--rpc <url> to override)",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(await chainCheck(rest[0] ?? "ethereum", flags["rpc"]));
     },
   },
 };

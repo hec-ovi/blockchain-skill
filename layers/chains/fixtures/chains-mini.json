@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Fixture Chain",
+    "chainId": 999999123,
+    "shortName": "fix",
+    "rpc": [
+      "https://rpc.fixture.example",
+      "https://rpc.fixture.example/${FIXTURE_API_KEY}",
+      "wss://ws.fixture.example"
+    ],
+    "nativeCurrency": { "name": "Fix", "symbol": "FIX", "decimals": 18 },
+    "explorers": [{ "url": "https://scan.fixture.example" }],
+    "faucets": ["https://faucet.fixture.example"]
+  },
+  {
+    "name": "No RPC Chain",
+    "chainId": 999999124,
+    "shortName": "norpc",
+    "rpc": ["wss://only-ws.example"],
+    "nativeCurrency": { "name": "No", "symbol": "NO", "decimals": 18 },
+    "explorers": [],
+    "faucets": []
+  }
+]
