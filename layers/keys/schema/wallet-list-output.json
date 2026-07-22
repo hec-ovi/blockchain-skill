@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "file": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "file",
+      "createdAt"
+    ],
+    "additionalProperties": false
+  },
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/keys/schema/wallet-list-output.json"
+}

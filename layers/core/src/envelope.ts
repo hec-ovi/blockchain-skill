@@ -66,12 +66,37 @@ export function fail(m: MetaInput, code: string, message: string, hint?: string)
   return { contractVersion: CONTRACT_VERSION, ok: false, error, meta: buildMeta(m) };
 }
 
+/** Error with a closed-set code and an optional steering hint for the calling agent. */
+export class CodedError extends Error {
+  readonly code: string;
+  readonly hint: string | undefined;
+  constructor(code: string, message: string, hint?: string) {
+    super(message);
+    this.code = code;
+    this.hint = hint;
+  }
+}
+
+/**
+ * Runs a layer operation and always returns an envelope: CodedError becomes
+ * its code, anything else becomes UNEXPECTED. Layers never leak exceptions.
+ */
+export async function run<T>(m: Omit<MetaInput, "startedAt">, fn: () => T | Promise<T>): Promise<Envelope<T>> {
+  const meta = { ...m, startedAt: performance.now() };
+  try {
+    return ok(meta, await fn());
+  } catch (e) {
+    if (e instanceof CodedError) return fail(meta, e.code, e.message, e.hint);
+    return fail(meta, "UNEXPECTED", String(e instanceof Error ? e.message : e));
+  }
+}
+
 /** Fail-closed boundary check: returns the value typed, or throws with the schema violations. */
 export function mustValidate<S extends z.ZodType>(schema: S, value: unknown, boundary: string): z.infer<S> {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
     const detail = parsed.error.issues.map((i) => `${i.path.join(".") || "$"}: ${i.message}`).join("; ");
-    throw new Error(`SCHEMA_INVALID at ${boundary}: ${detail}`);
+    throw new CodedError("SCHEMA_INVALID", `SCHEMA_INVALID at ${boundary}: ${detail}`);
   }
   return parsed.data;
 }

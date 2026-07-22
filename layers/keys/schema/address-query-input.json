@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "passphrase": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string",
+      "enum": [
+        "evm",
+        "btc"
+      ]
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "network": {
+      "type": "string",
+      "enum": [
+        "bitcoin",
+        "signet",
+        "testnet",
+        "regtest"
+      ]
+    },
+    "addressType": {
+      "type": "string",
+      "enum": [
+        "p2tr",
+        "p2wpkh"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "passphrase",
+    "family"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/keys/schema/address-query-input.json"
+}

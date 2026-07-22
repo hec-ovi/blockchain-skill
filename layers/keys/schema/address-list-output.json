@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "family": {
+            "type": "string",
+            "const": "evm"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "path": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "family",
+          "index",
+          "path",
+          "address"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "family": {
+            "type": "string",
+            "const": "btc"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "path": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "bitcoin",
+              "signet",
+              "testnet",
+              "regtest"
+            ]
+          },
+          "addressType": {
+            "type": "string",
+            "enum": [
+              "p2tr",
+              "p2wpkh"
+            ]
+          }
+        },
+        "required": [
+          "family",
+          "index",
+          "path",
+          "address",
+          "network",
+          "addressType"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  },
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/keys/schema/address-list-output.json"
+}
