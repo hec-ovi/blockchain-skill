@@ -5,6 +5,7 @@ import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
+import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
 import { readFileSync } from "node:fs";
 
 type Handler = (args: string[]) => Promise<number>;
@@ -260,6 +261,60 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           function: flags["fn"] ?? "",
           ...(flags["args"] !== undefined && { args: flags["args"].split(",").map((s) => s.trim()) }),
           ...(flags["value"] !== undefined && { valueWei: flags["value"] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
+    },
+  },
+  "swap-quote": {
+    summary: "swap-quote <chain> --sell 0x.. --buy 0x.. --amount <base-units> --from 0x.. [--adapter cow|kyber|uniswap] [--slippage bps]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await swapQuote({
+          chain: rest[0] ?? "ethereum",
+          sellToken: flags["sell"] ?? "",
+          buyToken: flags["buy"] ?? "",
+          sellAmount: flags["amount"] ?? "0",
+          from: flags["from"] ?? "",
+          ...(flags["adapter"] !== undefined && { adapter: flags["adapter"] }),
+          ...(flags["slippage"] !== undefined && { slippageBps: Number(flags["slippage"]) }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  swap: {
+    summary: "swap <chain> --sell 0x.. --buy 0x.. --amount <base-units> [--adapter] [--slippage bps] [--wallet name] [--rpc url] [--wait]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      const index = flags["index"] !== undefined ? Number(flags["index"]) : 0;
+      const { deriveEvmAddress } = await import("../../keys/src/derive.ts");
+      const { unlockMnemonic } = await import("../../keys/src/wallet.ts");
+      const wallet = flags["wallet"] ?? "main";
+      const passphrase = passphraseFrom(flags);
+      // derive `from` from the wallet unless overridden
+      let from = flags["from"] ?? "";
+      if (!from) {
+        try {
+          from = deriveEvmAddress(await unlockMnemonic(wallet, passphrase), index).address;
+        } catch {
+          from = "";
+        }
+      }
+      return emit(
+        await swapExec({
+          chain: rest[0] ?? "",
+          sellToken: flags["sell"] ?? "",
+          buyToken: flags["buy"] ?? "",
+          sellAmount: flags["amount"] ?? "0",
+          from,
+          wallet,
+          passphrase,
+          index,
+          ...(flags["adapter"] !== undefined && { adapter: flags["adapter"] }),
+          ...(flags["slippage"] !== undefined && { slippageBps: Number(flags["slippage"]) }),
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
           ...(flags["wait"] !== undefined && { wait: true }),
         }),
