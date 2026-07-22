@@ -21,8 +21,9 @@ beforeEach(() => {
 afterEach(() => rmSync(home, { recursive: true, force: true }));
 
 function cli(...args: string[]): { env: any; code: number } {
+  // Run in the isolated temp home so the project's .env is never auto-loaded into the test.
   try {
-    const out = execFileSync(process.execPath, [BIN, ...args], { encoding: "utf8", env });
+    const out = execFileSync(process.execPath, [BIN, ...args], { encoding: "utf8", env, cwd: home });
     return { env: JSON.parse(out), code: 0 };
   } catch (e: any) {
     const out = `${e.stdout ?? ""}${e.stderr ?? ""}`;

@@ -1,5 +1,8 @@
 #!/usr/bin/env node
+import { loadDotenv } from "../layers/core/src/dotenv.ts";
 import { runCli } from "../layers/agentio/src/cli.ts";
+
+loadDotenv();
 
 runCli(process.argv.slice(2)).then(
   (code) => process.exit(code),
