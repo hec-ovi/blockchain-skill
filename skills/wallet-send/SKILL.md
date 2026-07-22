@@ -7,6 +7,8 @@ description: Check balances and send crypto directly on-chain, non-custodially. 
 
 ## Read first
 
+Balances and every read are per-network: an address holds different amounts on Ethereum, Base, a testnet, or a local node. If the user has not said which network, ASK before checking; do not silently assume mainnet. Always state which network a balance refers to (the result's `meta.chain`).
+
 - Balance: `agent-wallet balance <chain> <address>` (add `--token 0x..` for an ERC-20).
 - Fees: `agent-wallet fees <chain>`.
 - Bitcoin UTXOs: `agent-wallet utxos <btc-network> <address>`.
