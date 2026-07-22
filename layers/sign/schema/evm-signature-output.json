@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "family": {
+      "type": "string",
+      "const": "evm"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]*$"
+    },
+    "address": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "family",
+    "signature",
+    "address"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/sign/schema/evm-signature-output.json"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "family": {
+      "type": "string",
+      "const": "evm"
+    },
+    "rawTx": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]*$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "from": {
+      "type": "string"
+    },
+    "chainId": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "nonce": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "family",
+    "rawTx",
+    "hash",
+    "from",
+    "chainId",
+    "nonce"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/sign/schema/evm-signed-output.json"
+}

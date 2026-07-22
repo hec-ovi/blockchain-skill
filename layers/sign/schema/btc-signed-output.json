@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "family": {
+      "type": "string",
+      "const": "btc"
+    },
+    "txHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]+$"
+    },
+    "txid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "vsize": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "feeSats": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "changeSats": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "inputs": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "outputs": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "from": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "family",
+    "txHex",
+    "txid",
+    "vsize",
+    "feeSats",
+    "changeSats",
+    "inputs",
+    "outputs",
+    "from"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/sign/schema/btc-signed-output.json"
+}
