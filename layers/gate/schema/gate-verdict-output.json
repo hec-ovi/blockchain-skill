@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "allowed": {
+      "type": "boolean",
+      "const": true
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "send",
+        "sign",
+        "deploy",
+        "contract-write",
+        "swap",
+        "bridge"
+      ]
+    },
+    "chain": {
+      "type": "string"
+    },
+    "mainnet": {
+      "type": "boolean"
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "allowMainnet": {
+          "type": "boolean"
+        },
+        "capApplied": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "allowMainnet",
+        "capApplied"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "allowed",
+    "kind",
+    "chain",
+    "mainnet",
+    "policy"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/gate/schema/gate-verdict-output.json"
+}

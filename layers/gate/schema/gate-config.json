@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "allowMainnet": {
+      "default": false,
+      "type": "boolean"
+    },
+    "allowedChains": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "maxValueWei": {
+      "default": null,
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "maxAmountSats": {
+      "default": null,
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "allowMainnet",
+    "allowedChains",
+    "maxValueWei",
+    "maxAmountSats"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/gate/schema/gate-config.json"
+}

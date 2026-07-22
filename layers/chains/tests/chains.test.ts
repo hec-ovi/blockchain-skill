@@ -46,6 +46,8 @@ describe("chain resolution (offline)", () => {
     expect(sepolia.testnet).toBe(true);
     const anvil = await resolveChain("anvil", neverFetch);
     expect(anvil.family === "evm" && anvil.chainId).toBe(31337);
+    expect(anvil.testnet).toBe(true);
+    expect((await resolveChain("ethereum", neverFetch)).testnet).toBe(false);
   });
 
   it("resolves the four Bitcoin networks builtin", async () => {

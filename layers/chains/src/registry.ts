@@ -75,7 +75,7 @@ function usableRpcs(urls: string[]): string[] {
 }
 
 function isTestnetName(name: string): boolean {
-  return /test|sepolia|goerli|holesky|hoodi|devnet/i.test(name);
+  return /test|sepolia|goerli|holesky|hoodi|devnet|anvil|localhost|foundry|hardhat/i.test(name);
 }
 
 function fromViem(c: Chain): EvmChainInfo {

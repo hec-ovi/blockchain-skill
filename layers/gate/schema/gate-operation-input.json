@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "send",
+        "sign",
+        "deploy",
+        "contract-write",
+        "swap",
+        "bridge"
+      ]
+    },
+    "chain": {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "enum": [
+            "evm",
+            "btc"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "testnet": {
+          "type": "boolean"
+        },
+        "chainId": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "network": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "name",
+        "testnet"
+      ],
+      "additionalProperties": false
+    },
+    "valueBaseUnits": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    }
+  },
+  "required": [
+    "kind",
+    "chain"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/gate/schema/gate-operation-input.json"
+}
