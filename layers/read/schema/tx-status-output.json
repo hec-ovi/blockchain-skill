@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "evm"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "reverted",
+            "pending",
+            "not_found"
+          ]
+        },
+        "blockNumber": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valueWei": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "gasUsed": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        }
+      },
+      "required": [
+        "family",
+        "hash",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "btc"
+        },
+        "txid": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "pending",
+            "not_found"
+          ]
+        },
+        "blockHeight": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "feeSats": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "vsize": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "family",
+        "txid",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/read/schema/tx-status-output.json"
+}

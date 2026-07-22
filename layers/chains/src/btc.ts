@@ -24,6 +24,34 @@ export async function esploraGet(info: BtcChainInfo, path: string, fetchFn: Fetc
   throw new CodedError("ESPLORA_UNAVAILABLE", lastError, "All Esplora endpoints failed; retry later or configure another endpoint");
 }
 
+/**
+ * JSON-RPC call to a bitcoind node (regtest and self-hosted setups).
+ * URL carries basic auth: http://user:pass@host:port. Override the builtin
+ * default with AGENT_WALLET_BITCOIND_URL.
+ */
+export async function bitcoindCall(info: BtcChainInfo, method: string, params: unknown[] = []): Promise<unknown> {
+  const raw = process.env["AGENT_WALLET_BITCOIND_URL"] ?? info.bitcoindRpc;
+  if (!raw) {
+    throw new CodedError("BITCOIND_REQUIRED", `${info.name} has no bitcoind RPC configured`, "Set AGENT_WALLET_BITCOIND_URL to http://user:pass@host:port");
+  }
+  const url = new URL(raw);
+  const auth = url.username ? `Basic ${Buffer.from(`${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`).toString("base64")}` : undefined;
+  const res = await fetch(`${url.protocol}//${url.host}${url.pathname}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(auth && { authorization: auth }) },
+    body: JSON.stringify({ jsonrpc: "1.0", id: "agent-wallet", method, params }),
+  });
+  const body = (await res.json().catch(() => null)) as { result?: unknown; error?: { code: number; message: string } } | null;
+  if (!body || body.error) {
+    throw new CodedError(
+      "BITCOIND_ERROR",
+      body?.error ? `${method}: ${body.error.message}` : `${method}: HTTP ${res.status}`,
+      "Check the node is running and AGENT_WALLET_BITCOIND_URL credentials are right",
+    );
+  }
+  return body.result;
+}
+
 export interface BtcCheck {
   network: string;
   tipHeight: number;

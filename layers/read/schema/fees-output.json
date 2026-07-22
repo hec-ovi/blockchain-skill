@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "evm"
+        },
+        "maxFeePerGas": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "maxPriorityFeePerGas": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "baseFeePerGas": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        }
+      },
+      "required": [
+        "family",
+        "maxFeePerGas",
+        "maxPriorityFeePerGas"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "btc"
+        },
+        "fastestSatVb": {
+          "type": "number",
+          "minimum": 1
+        },
+        "halfHourSatVb": {
+          "type": "number",
+          "minimum": 1
+        },
+        "hourSatVb": {
+          "type": "number",
+          "minimum": 1
+        },
+        "economySatVb": {
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "family",
+        "fastestSatVb",
+        "halfHourSatVb",
+        "hourSatVb",
+        "economySatVb"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/read/schema/fees-output.json"
+}

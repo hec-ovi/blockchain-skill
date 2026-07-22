@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { createWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
 import { chainCheck, chainResolve } from "../../chains/src/api.ts";
+import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -117,6 +118,47 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
     run: async (args) => {
       const { flags, rest } = parseFlags(args);
       return emit(await chainCheck(rest[0] ?? "ethereum", flags["rpc"]));
+    },
+  },
+  balance: {
+    summary: "balance <chain> <address> [--token 0x..] [--rpc url]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await balance({
+          chain: rest[0] ?? "ethereum",
+          ...(rest[1] !== undefined && { address: rest[1] }),
+          ...(flags["token"] !== undefined && { token: flags["token"] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  utxos: {
+    summary: "utxos <btc-network> <address>",
+    run: async (args) => {
+      const { rest } = parseFlags(args);
+      return emit(await utxos({ chain: rest[0] ?? "bitcoin", ...(rest[1] !== undefined && { address: rest[1] }) }));
+    },
+  },
+  fees: {
+    summary: "fees <chain> [--rpc url]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(await fees({ chain: rest[0] ?? "ethereum", ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }) }));
+    },
+  },
+  tx: {
+    summary: "tx <chain> <hash-or-txid> [--rpc url]",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await txStatus({
+          chain: rest[0] ?? "ethereum",
+          ...(rest[1] !== undefined && { ref: rest[1] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
     },
   },
 };

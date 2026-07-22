@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "evm"
+        },
+        "address": {
+          "type": "string"
+        },
+        "wei": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "formatted": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "address",
+        "wei",
+        "formatted",
+        "symbol"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "evm"
+        },
+        "token": {
+          "type": "string"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "formatted": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "family",
+        "token",
+        "holder",
+        "raw",
+        "formatted",
+        "symbol",
+        "decimals"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "family": {
+          "type": "string",
+          "const": "btc"
+        },
+        "address": {
+          "type": "string"
+        },
+        "confirmedSats": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "mempoolSats": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "totalSats": {
+          "type": "string",
+          "pattern": "^-?\\d+$"
+        },
+        "formatted": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "address",
+        "confirmedSats",
+        "mempoolSats",
+        "totalSats",
+        "formatted"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/read/schema/balance-output.json"
+}
