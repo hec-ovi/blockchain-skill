@@ -1,0 +1,14 @@
+{
+  "name": "blockchain-skill",
+  "owner": {
+    "name": "Hector Oviedo",
+    "url": "https://github.com/hec-ovi"
+  },
+  "plugins": [
+    {
+      "name": "agent-wallet",
+      "source": "./",
+      "description": "Non-custodial agent wallet toolkit: CLI + MCP server + skills for EVM and Bitcoin. Create wallets, send, receive, swap, bridge, sign, deploy and verify Solidity contracts, no middleman."
+    }
+  ]
+}

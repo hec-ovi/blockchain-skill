@@ -1,0 +1,126 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
+const read = (p: string) => readFileSync(join(root, p), "utf8");
+const readJson = (p: string) => JSON.parse(read(p));
+
+describe("distribution: manifests in lockstep", () => {
+  const pkg = readJson("package.json");
+
+  it("version matches across package.json, plugin.json and marketplace.json", () => {
+    expect(readJson(".claude-plugin/plugin.json").version).toBe(pkg.version);
+  });
+
+  it("plugin/marketplace name is agent-wallet and the marketplace points at the repo root", () => {
+    expect(readJson(".claude-plugin/plugin.json").name).toBe("agent-wallet");
+    const market = readJson(".claude-plugin/marketplace.json");
+    const plugin = market.plugins.find((p: any) => p.name === "agent-wallet");
+    expect(plugin).toBeDefined();
+    expect(plugin.source).toBe("./");
+  });
+
+  it(".mcp.json launches the stdio server via the bin", () => {
+    const mcp = readJson(".mcp.json");
+    const server = mcp.mcpServers["agent-wallet"];
+    expect(server.command).toBe("node");
+    expect(server.args).toContain("mcp");
+  });
+});
+
+describe("distribution: skills present and well-formed", () => {
+  const skillsDir = join(root, "skills");
+  const skills = readdirSync(skillsDir).filter((d) => existsSync(join(skillsDir, d, "SKILL.md")));
+
+  it("ships the router plus the six fat sub-skills", () => {
+    expect(skills.sort()).toEqual(["agent-wallet", "contract-deploy", "contract-use", "wallet-bridge", "wallet-send", "wallet-setup", "wallet-swap"]);
+  });
+
+  it("every SKILL.md has name + a pushy description in frontmatter", () => {
+    for (const s of skills) {
+      const body = read(`skills/${s}/SKILL.md`);
+      const fm = body.match(/^---\n([\s\S]*?)\n---/);
+      expect(fm, `${s} has no frontmatter`).toBeTruthy();
+      expect(fm![1]).toMatch(/name:\s*\S+/);
+      const desc = fm![1].match(/description:\s*(.+)/)?.[1] ?? "";
+      expect(desc.length, `${s} description too short`).toBeGreaterThan(80);
+      expect(desc.toLowerCase()).toContain("trigger");
+    }
+  });
+
+  it("every referenced references/*.md file exists", () => {
+    for (const s of skills) {
+      const body = read(`skills/${s}/SKILL.md`);
+      for (const m of body.matchAll(/\]\((references\/[a-z0-9-]+\.md)\)/g)) {
+        expect(existsSync(join(skillsDir, s, m[1]!)), `${s} links missing ${m[1]}`).toBe(true);
+      }
+    }
+  });
+});
+
+describe("distribution: every layer contract is valid", () => {
+  const layersDir = join(root, "layers");
+  const layers = readdirSync(layersDir).filter((d) => existsSync(join(layersDir, d, "CONTRACT.md")));
+
+  it("each layer has CONTRACT.md and a schema/ dir with at least one schema (except agentio)", () => {
+    for (const l of layers) {
+      expect(existsSync(join(layersDir, l, "CONTRACT.md"))).toBe(true);
+      if (l === "agentio") continue;
+      const schemaDir = join(layersDir, l, "schema");
+      expect(existsSync(schemaDir), `${l} has no schema/`).toBe(true);
+      expect(readdirSync(schemaDir).filter((f) => f.endsWith(".json")).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("every schema link in a CONTRACT.md resolves to a real file", () => {
+    for (const l of layers) {
+      const contract = read(`layers/${l}/CONTRACT.md`);
+      for (const m of contract.matchAll(/\]\((schema\/[a-z0-9-]+\.json)\)/g)) {
+        expect(existsSync(join(layersDir, l, m[1]!)), `${l} links missing ${m[1]}`).toBe(true);
+      }
+    }
+  });
+});
+
+describe("distribution: no em or en dashes in docs and manifests", () => {
+  const targets = [
+    "README.md",
+    "docs/RESEARCH.md",
+    "docs/ARCHITECTURE.md",
+    "docs/INDEX.md",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+  ];
+
+  it("shipped docs use plain hyphens only", () => {
+    for (const t of targets) {
+      const body = read(t);
+      expect(body.includes("—"), `${t} has an em dash`).toBe(false);
+      expect(body.includes("–"), `${t} has an en dash`).toBe(false);
+    }
+  });
+
+  it("every SKILL.md, CONTRACT.md and reference is dash-clean", () => {
+    const check = (dir: string, file: string) => {
+      for (const d of readdirSync(join(root, dir))) {
+        const base = join(root, dir, d);
+        const main = join(base, file);
+        if (existsSync(main)) {
+          const body = readFileSync(main, "utf8");
+          expect(body.includes("—") || body.includes("–"), `${dir}/${d}/${file} has a dash`).toBe(false);
+        }
+        const refs = join(base, "references");
+        if (existsSync(refs)) {
+          for (const r of readdirSync(refs)) {
+            const body = readFileSync(join(refs, r), "utf8");
+            expect(body.includes("—") || body.includes("–"), `${dir}/${d}/references/${r} has a dash`).toBe(false);
+          }
+        }
+      }
+    };
+    check("skills", "SKILL.md");
+    check("layers", "CONTRACT.md");
+  });
+});
