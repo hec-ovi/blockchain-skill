@@ -1,0 +1,52 @@
+{
+  "name": "agent-wallet-skill",
+  "version": "0.1.0",
+  "description": "Non-custodial agent wallet toolkit: CLI + MCP server + Claude skill. Create wallets, send, receive, swap, bridge, sign, deploy and verify Solidity contracts. EVM and Bitcoin, local keys, no middleman.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Hector Oviedo",
+  "homepage": "https://github.com/hec-ovi/blockchain-skill",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hec-ovi/blockchain-skill.git"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "agent-wallet": "bin/agent-wallet.ts",
+    "agent-wallet-skill": "bin/agent-wallet.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "mcp": "node bin/agent-wallet.ts mcp"
+  },
+  "keywords": [
+    "mcp",
+    "claude-skill",
+    "blockchain",
+    "wallet",
+    "non-custodial",
+    "ethereum",
+    "bitcoin",
+    "evm",
+    "solidity",
+    "ai-agents"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@scure/bip32": "^2.0.0",
+    "@scure/bip39": "^2.0.0",
+    "@scure/btc-signer": "^2.0.0",
+    "ethereum-cryptography": "^3.2.0",
+    "viem": "^2.55.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}
