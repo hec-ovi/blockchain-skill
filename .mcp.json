@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "agent-wallet": {
+      "command": "node",
+      "args": ["bin/agent-wallet.ts", "mcp"],
+      "timeout": 600000
+    }
+  }
+}
