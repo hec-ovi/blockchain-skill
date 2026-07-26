@@ -30,10 +30,10 @@ describe("state store", () => {
   });
 
   it("overwrites atomically and deletes", () => {
-    saveState("bridge-1", { step: 1 });
-    saveState("bridge-1", { step: 2 });
-    expect(loadState("bridge-1")).toEqual({ step: 2 });
-    expect(deleteState("bridge-1")).toBe(true);
+    saveState("flow-1", { step: 1 });
+    saveState("flow-1", { step: 2 });
+    expect(loadState("flow-1")).toEqual({ step: 2 });
+    expect(deleteState("flow-1")).toBe(true);
     expect(listStates()).toEqual([]);
   });
 

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CodedError } from "../../core/src/envelope.ts";
 import { loadConfig } from "../../core/src/config.ts";
 
-export const OPERATION_KINDS = ["send", "sign", "deploy", "contract-write", "swap", "bridge"] as const;
+export const OPERATION_KINDS = ["send", "sign", "deploy", "contract-write", "swap"] as const;
 export type OperationKind = (typeof OPERATION_KINDS)[number];
 
 export const gateConfigSchema = z

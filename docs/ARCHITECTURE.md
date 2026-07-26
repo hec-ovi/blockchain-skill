@@ -9,7 +9,7 @@ The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `n
 ## Non-negotiables
 
 - Non-custodial, barehand: keys are generated locally, stored only as a passphrase-encrypted keystore v3 file (mode 0600), and signing happens in-process. Broadcast goes straight to public RPC / Esplora endpoints. No MetaMask, no exchange, no hosted signer.
-- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, LI.FI key, CDP for faucet) are optional accelerators, never requirements.
+- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, CDP for faucet) are optional accelerators, never requirements.
 - Chain-agnostic: EVM chains resolve from viem/chains + chainid.network via defineChain; Bitcoin ships mainnet/signet/testnet4. New chain families are new adapters, not rewrites.
 - Fail closed: CLI responses and multi-step state are schema-shaped JSON envelopes. A deterministic gate layer authorizes every state-changing operation before signing. Prompt text is never an enforcement mechanism.
 
@@ -40,10 +40,9 @@ Ripple rule for contracts: additive changes bump a minor `contractVersion`; brea
 | 6 | `layers/send` | End-to-end transfer: gate, sign, broadcast, optional EVM wait | write |
 | 7 | `layers/learn` | Contract intelligence: verified source + ABI via Sourcify -> Blockscout -> Etherscan v2 (keyed, optional) -> WhatsABI for unverified; proxy resolution | read |
 | 8 | `layers/contracts` | Compile (solc-js), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
-| 9 | `layers/swap` | Quote + execute, ports-and-adapters: CoW (primary), KyberSwap (fallback), Uniswap quote backstop | write |
-| 10 | `layers/bridge` | Cross-chain route/quote/execute/status via LI.FI adapter | write |
-| 11 | `layers/faucet` | Self-serve testnet funding via Coinbase CDP (optional keys) | write |
-| 12 | `layers/agentio` | CLI composition (`agent-wallet <verb>`), session `init` doctor, help/version | n/a |
+| 9 | `layers/swap` | Quote + execute (CoW, Kyber, Uniswap), wrap/unwrap native↔WETH | write |
+| 10 | `layers/faucet` | Self-serve testnet funding via Coinbase CDP (optional keys) | write |
+| 11 | `layers/agentio` | CLI composition (`agent-wallet <verb>`), session `init` doctor, help/version | n/a |
 
 ### Envelope (every CLI response)
 
@@ -63,7 +62,7 @@ Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` 
 
 - Keystore: mnemonic encrypted to Web3 Secret Storage v3 (scrypt) using ethereum-cryptography primitives; interops with `cast wallet import` and geth. Passphrase from `AGENT_WALLET_PASSPHRASE` or `--passphrase`; never written to disk or logs.
 - Data dir: `~/.agent-wallet/` (override `AGENT_WALLET_HOME`): `keystore/`, `state/`, `cache/`, `config.json`.
-- Gate defaults: testnets allowed, mainnet denied until `config.json` opt-in. Every send/swap/bridge/deploy/write passes the gate before sign; deny includes the config change that would allow it.
+- Gate defaults: testnets allowed, mainnet denied until `config.json` opt-in. Every send/swap/deploy/write passes the gate before sign; deny includes the config change that would allow it.
 - External content (RPC responses, fetched contract source) is untrusted data: never executed as code.
 
 ## Skills (context engineering)
@@ -95,6 +94,6 @@ Agent flow: resolve CLI (PATH or skill-pack launcher / `dist/agent-wallet.mjs`) 
 ## Out of scope for now
 
 - Solana family.
-- THORChain-style native BTC-EVM swaps (bridge is EVM-to-EVM).
+- Cross-chain bridging (out of scope).
 - Hardware wallets and OS keychains (passphrase-encrypted file is the baseline).
 - Process-per-layer isolation or network RPC between layers.

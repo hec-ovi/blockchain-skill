@@ -1,6 +1,6 @@
 ---
 name: agent-wallet
-description: Operate a non-custodial blockchain wallet on-chain (EVM and Bitcoin), no exchange or MetaMask. Create or import a wallet, balances, send native/ERC-20/BTC, swap tokens, bridge chains, faucet testnets, compile/deploy/call Solidity. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, transfer, swap, bridge, trade, Solidity, contract, on-chain, testnet, mainnet, faucet, sepolia.
+description: Operate a non-custodial blockchain wallet on-chain (EVM and Bitcoin), no exchange or MetaMask. Create or import a wallet, balances, send native/ERC-20/BTC, swap tokens, faucet testnets, compile/deploy/call Solidity. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, transfer, swap, trade, Solidity, contract, on-chain, testnet, mainnet, faucet, sepolia.
 ---
 
 # agent-wallet
@@ -48,15 +48,14 @@ Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 | Pay someone (native, ERC-20, BTC) | `send` |
 | Same-chain token A → B | `swap-quote` then `swap` (sell WETH not bare ETH; `wrap` first if needed) |
 | ETH ↔ WETH | `wrap` / `unwrap` |
-| Cross-chain | `bridge-quote` then `bridge` then `bridge-status` |
 | Free testnet gas | `faucet` |
 | Unknown contract | `contract-learn` then call/write |
 | Deploy | `contract-compile` then `contract-deploy` |
 | Chain meta / RPC alive | `chain-resolve` / `chain-check` |
 
-`send` = transfer to an address. `swap` = convert tokens for yourself. `bridge` = change chain. Never default to mainnet silently; ask which network; state it in answers.
+`send` = transfer to an address. `swap` = convert tokens for yourself. Never default to mainnet silently; ask which network; state it in answers.
 
-**Amounts:** never invent vague sizes ("tiny", "a bit"). Use an explicit number the user gave, or pick a concrete value and state it (e.g. `0.00001` ETH display, or raw base units for swap/bridge). Leave gas headroom on the balance.
+**Amounts:** never invent vague sizes ("tiny", "a bit"). Use an explicit number the user gave, or pick a concrete value and state it (e.g. `0.00001` ETH display, or raw base units for swap). Leave gas headroom on the balance.
 
 **Use this CLI only** for wallet/chain ops. Do not quote swaps via random web APIs (0x, Uniswap web, curl to aggregators). `swap-quote` / `swap` on the CLI are the path.
 
@@ -113,14 +112,6 @@ agent-wallet swap <chain> --sell 0xWETH --buy 0xTOKEN --amount <raw> --wallet ma
 
 Quote first with an **exact** raw amount. Do not sell bare native: `wrap` then sell WETH. Prefer CoW where liquid; Uniswap works on Sepolia when pools exist; Kyber on mainnets. Optional `--adapter cow|kyber|uniswap`, `--slippage 50` (bps). Re-quote if stale.
 
-### Bridge (EVM→EVM, base units)
-
-```
-agent-wallet bridge-quote --from-chain A --to-chain B --from-token 0x.. --to-token 0x.. --amount <raw> --address 0xYOU
-agent-wallet bridge --from-chain A --to-chain B --from-token 0x.. --to-token 0x.. --amount <raw> --wallet main --wait
-agent-wallet bridge-status <sourceTx> --from-chain A --to-chain B
-```
-
 ### Faucet / contracts
 
 ```
@@ -140,7 +131,7 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 
 - Mainnet is DENIED by default. Testnets (sepolia, base-sepolia, signet) allowed.
 - Config: `~/.agent-wallet/config.json` → `gate.allowMainnet`, `gate.allowedChains`, `gate.maxValueWei` / `maxAmountSats`.
-- Gated: send, swap, bridge, contract-deploy, contract-write. Reads and quotes are not.
+- Gated: send, swap, contract-deploy, contract-write. Reads and quotes are not.
 - Keys: `keystore/<name>.json` Web3 v3 scrypt; passphrase never logged.
 
 ## Anti-patterns
@@ -155,5 +146,5 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 - Never `swap` when the user asked to transfer to someone; use `send` (`--token` if ERC-20).
 - Never `send` when they asked to convert A→B for themselves; use `swap`.
 - Never retry `GATE_DENIED` except via config.json.
-- Never execute a stale swap/bridge quote; re-quote.
+- Never execute a stale swap quote; re-quote.
 - Never call an unknown contract before `contract-learn`.

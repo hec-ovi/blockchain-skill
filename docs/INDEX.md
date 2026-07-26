@@ -14,7 +14,6 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Fetching ABI/source, proxy resolution, unverified contracts | `layers/learn/` |
 | Compiling, deploying, verifying, calling contracts | `layers/contracts/` |
 | Swap quotes and execution, aggregator adapters | `layers/swap/` |
-| Cross-chain bridging | `layers/bridge/` |
 | Self-serve testnet funding (CDP faucet) | `layers/faucet/` |
 | CLI verbs, init doctor, output formatting | `layers/agentio/` |
 | Bundled CLI build (esbuild) | `scripts/build.mjs` -> `dist/agent-wallet.mjs` |

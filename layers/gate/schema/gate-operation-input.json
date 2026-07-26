@@ -9,8 +9,7 @@
         "sign",
         "deploy",
         "contract-write",
-        "swap",
-        "bridge"
+        "swap"
       ]
     },
     "chain": {

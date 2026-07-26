@@ -1,6 +1,6 @@
 # agent-wallet (blockchain-skill)
 
-Toolkit that lets any AI agent operate a wallet directly on-chain: create wallets, receive, send, swap, bridge, sign, deploy and verify Solidity contracts, and learn how deployed contracts work. Keys are generated and stored on your own machine (encrypted keystore v3), and transactions go straight to public RPC endpoints. No MetaMask, no exchange, no custodial anything.
+Toolkit that lets any AI agent operate a wallet directly on-chain: create wallets, receive, send, swap, wrap, sign, deploy and verify Solidity contracts, and learn how deployed contracts work. Keys are generated and stored on your own machine (encrypted keystore v3), and transactions go straight to public RPC endpoints. No MetaMask, no exchange, no custodial anything.
 
 Two faces over one engine: a self-contained CLI (`agent-wallet <verb>`) and one fat agent skill replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs). Same verbs, same JSON envelope everywhere.
 
@@ -43,7 +43,7 @@ Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it autom
 
 1. Resolve CLI (on PATH, or `.noob/skills/agent-wallet/agent-wallet`, or `node …/dist/agent-wallet.mjs`).
 2. `agent-wallet init` once per session (doctor + data dir).
-3. Verbs: `wallet-create`, `balance`, `send`, `swap`, `bridge`, `contract-*`, `faucet`, …
+3. Verbs: `wallet-create`, `wallet-export`, `balance`, `send`, `swap`, `wrap`, `contract-*`, `faucet`, …
 
 Each verb is one process: JSON envelope on stdout, then exit. Not a long-running server.
 
@@ -54,13 +54,12 @@ Each verb is one process: JSON envelope on stdout, then exit. Not a long-running
 | Wallet | wallet-create, wallet-import, wallet-list, wallet-addresses | EVM + Bitcoin |
 | Read | balance, utxos, fees, tx | EVM + Bitcoin |
 | Send | send (native, ERC-20, BTC, sweep) | EVM + Bitcoin |
-| Swap | swap-quote, swap (CoW, Kyber, Uniswap) | EVM |
-| Bridge | bridge-quote, bridge, bridge-status (LI.FI) | EVM to EVM |
+| Swap | swap-quote, swap (CoW, Kyber, Uniswap), wrap, unwrap | EVM |
 | Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn | EVM |
 | Funding | faucet (self-serve testnet gas) | Base Sepolia, Ethereum Sepolia |
 | Session | init, version, help | local |
 
-Every default backend is keyless. Optional keys (Etherscan, LI.FI, CDP for faucet) only raise limits or unlock funding.
+Every default backend is keyless. Optional keys (Etherscan, CDP for faucet) only raise limits or unlock funding.
 
 ## Funding (self-serve gas)
 
@@ -78,7 +77,7 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 **Automated suite.** `npm test` builds the bundle, then runs contract tests for every layer, BIP-86/BIP-84 vectors, coin selection, envelope validation, real CLI e2e (source + bundle), and `tests/check_skill.sh` (skill copies byte-identical, versions lockstep, launcher + `dist/agent-wallet.mjs` present).
 
-**Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber / LI.FI quotes.
+**Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
 **Agent-driven runs** on Base Sepolia (wallet, faucet, send, deploy, call) are documented with explorer links in git history; re-verify after major releases with a separate agent and only the skill text as instructions.
 
@@ -86,6 +85,6 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 Layers under `layers/` each own `CONTRACT.md`, `schema/`, `src/`, and `tests/`. Cross-layer TypeScript imports are limited to published modules (import-boundary test); the CLI composition root is `agentio`. Outbound agent I/O is one JSON envelope. See `docs/ARCHITECTURE.md` and `docs/INDEX.md`.
 
-Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (CLI + init).
+Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, faucet, agentio (CLI + init).
 
 Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). Skill installs and the package ship that file so agents need only Node.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Removed cross-chain bridge (LI.FI layer and CLI verbs) from the toolkit and skill.
+
 ## 0.3.6
 
 - wrap/unwrap native↔WETH; Uniswap Sepolia quote+execute; LI.FI User-Agent; swap refuses bare native sell with wrap hint.

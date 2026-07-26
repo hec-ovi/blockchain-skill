@@ -4,7 +4,7 @@ contractVersion: 1.0.0
 
 ## Purpose
 
-Deterministic policy gate: every state-changing operation (send, sign, deploy, contract-write, swap, bridge) is allowed or denied by config, before anything is signed.
+Deterministic policy gate: every state-changing operation (send, sign, deploy, contract-write, swap) is allowed or denied by config, before anything is signed.
 
 ## Inputs
 

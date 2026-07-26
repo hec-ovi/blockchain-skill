@@ -27,13 +27,13 @@ None.
 
 ## Dependencies
 
-Composition root: reads the published api of keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet. `init` uses core home + keys list only.
+Composition root: reads the published api of keys, chains, read, sign, gate, send, learn, contracts, swap, faucet. `init` uses core home + keys list only.
 
 ## Invariants
 
 - The CLI calls the SAME layer functions the skills document; there is no second implementation of any operation.
 - The passphrase comes from the environment or `--passphrase`; it is never written to logs or envelopes.
-- Verb summaries state when to use each verb and are non-overlapping (send vs swap vs bridge), so a model routes correctly.
+- Verb summaries state when to use each verb and are non-overlapping (send vs swap), so a model routes correctly.
 - The published runtime is `dist/agent-wallet.mjs` (built by `npm run build`); skill packs and npm packages ship that file so agents need only Node.
 
 ## How to modify this blackbox safely
