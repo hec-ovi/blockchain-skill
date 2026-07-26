@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- Lean fat skill rewrite (websearch-shaped): intent table, full verbs, safety, anti-patterns. Dropped playbook bloat. Enforced <220 lines.
+
 ## 0.3.2
 
 - Expert skill rewrite: intent-to-verb routing, complete verb catalog (including faucet, chain-*, all contract/swap/bridge flows), multi-step playbooks (transfer, swap, bridge, deploy, return funds), error playbook, send-vs-swap-vs-bridge routing rules.
