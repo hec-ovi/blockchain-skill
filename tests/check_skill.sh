@@ -76,6 +76,8 @@ for f in "${ALL[@]}"; do
   grep -qF 'Never call an unknown contract before `contract-learn`' "$f" || err "$f lost the learn-before-call rule"
   grep -qF 'agent-wallet init' "$f" || err "$f lost the init-first rule"
   grep -qF 'dist/agent-wallet.mjs' "$f" || err "$f lost the bundled CLI path"
+  grep -qF 'Never brute-force' "$f" || err "$f lost the no-bruteforce passphrase rule"
+  grep -qF 'Requires the 0x address' "$f" || err "$f lost the balance-needs-address rule"
 done
 ok "safety-rule scan done"
 

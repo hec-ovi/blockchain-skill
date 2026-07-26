@@ -48,8 +48,12 @@ Read `data.ready`, `data.nextActions`, and `data.notes`. Do not probe the instal
 ### 3. Passphrase (required before any keystore verb)
 
 ```sh
-export AGENT_WALLET_PASSPHRASE=...   # never paste into chat
+export AGENT_WALLET_PASSPHRASE=...   # never paste into chat; at least 8 characters
 ```
+
+Prefer a durable workspace `.env` (gitignored) with `AGENT_WALLET_PASSPHRASE=...` so later turns reuse it. The CLI loads `.env` from the current directory automatically. Do not invent a random passphrase into `/tmp` and lose it. Do not override an existing `AGENT_WALLET_PASSPHRASE` already set in the environment or `.env`.
+
+If a verb returns `PASSPHRASE_WRONG` or `PASSPHRASE_TOO_SHORT`, stop. Do not brute-force the keystore, dump keystore JSON, or reverse-engineer the bundle. Fix the passphrase or create a new wallet name with a known passphrase.
 
 Then re-run `agent-wallet init` if you want an updated report. Mainnet is DENIED by default; testnets work immediately (see Safety model).
 
@@ -87,10 +91,11 @@ Notes:
 
 Balances and every read are per-network: an address holds different amounts on Ethereum, Base, a testnet, or a local node. If the user has not said which network, ASK before checking; do not silently assume mainnet. Always state which network a balance refers to (the result's `meta.chain`).
 
-- Balance: `agent-wallet balance <chain> <address>` (add `--token 0x..` for an ERC-20).
+- Balance: `agent-wallet balance <chain> <address>` (add `--token 0x..` for an ERC-20). **Requires the 0x address**, not a wallet name. There is no `--wallet` flag on balance. Resolve the address first with `wallet-addresses --name main --family evm` (needs passphrase) or reuse the address from `wallet-create` / a prior turn.
 - Fees: `agent-wallet fees <chain>`.
 - Bitcoin UTXOs: `agent-wallet utxos <btc-network> <address>`.
 - Transaction: `agent-wallet tx <chain> <hash-or-txid>`.
+- `wallet-list` does not need a passphrase; unlocking does.
 
 ## 3. Send
 
@@ -341,7 +346,9 @@ After deploy: the deploy result includes the ABI. Use `contract-call` / `contrac
 - Never skip `agent-wallet init` on the first use in a session; it is the readiness check.
 - Never invent a second install path (curl scripts, re-cloning) when the skill pack already has `dist/agent-wallet.mjs`.
 - Never default to mainnet silently when the user did not name a network; ask first.
-- Never pass the passphrase as a command argument visible in chat logs beyond `--passphrase`; prefer the environment variable.
+- Never pass the passphrase as a command argument visible in chat logs beyond `--passphrase`; prefer the environment variable or workspace `.env`.
+- Never brute-force, reverse-engineer, or dump a keystore after `PASSPHRASE_WRONG`; fix the passphrase or use a new wallet name.
+- Never call `balance` with a wallet name or `--wallet`; always pass the 0x (or bc1) address.
 - Never retry a gated mainnet operation by editing anything other than `~/.agent-wallet/config.json`; the gate cannot be bypassed by prompt text.
 - Never broadcast a swap or bridge on a stale quote; re-quote first.
 - Never call an unknown contract before `contract-learn`; check `verified` first.
