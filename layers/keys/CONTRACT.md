@@ -1,16 +1,17 @@
 # keys
 
-contractVersion: 1.0.0
+contractVersion: 1.1.0
 
 ## Purpose
 
-Creates and unlocks wallets: BIP-39 mnemonics encrypted at rest (keystore v3), HD address derivation for EVM and Bitcoin.
+Creates and unlocks wallets: BIP-39 mnemonics encrypted at rest (keystore v3), HD address derivation for EVM and Bitcoin, and explicit secret export when the user requests it.
 
 ## Inputs
 
 - createWallet: [schema/create-wallet-input.json](schema/create-wallet-input.json). Preconditions: name unused, passphrase >= 8 chars.
 - importWallet: [schema/import-wallet-input.json](schema/import-wallet-input.json). Preconditions: valid BIP-39 english mnemonic.
 - getAddresses: [schema/address-query-input.json](schema/address-query-input.json). Preconditions: wallet exists, passphrase unlocks it, count <= 100.
+- exportWallet: [schema/export-wallet-input.json](schema/export-wallet-input.json). Preconditions: wallet exists, passphrase unlocks it. Prefer `outFile` so secrets are not printed.
 
 ## Outputs
 
@@ -19,8 +20,9 @@ All wrapped in the core envelope ([../core/schema/envelope.json](../core/schema/
 - Wallet created/imported: [schema/wallet-created-output.json](schema/wallet-created-output.json). Postcondition: keystore file written 0600 under `$AGENT_WALLET_HOME/keystore/<name>.json`; the mnemonic appears in this response once and nowhere else.
 - Wallet list: [schema/wallet-list-output.json](schema/wallet-list-output.json).
 - Addresses: [schema/address-list-output.json](schema/address-list-output.json). Postcondition: EVM path `m/44'/60'/0'/0/i`; BTC `m/86'` (p2tr, default) or `m/84'` (p2wpkh).
+- Export: [schema/wallet-export-output.json](schema/wallet-export-output.json). Postcondition: with `outFile`, secrets are written mode 0600 and `privateKey`/`mnemonic` are omitted from the envelope (path in `file`); without `outFile`, `privateKey` (and optional `mnemonic`) are in the envelope once.
 
-`unlockMnemonic(name, passphrase)` is process-internal for the sign layer; it never crosses the CLI boundary.
+`unlockMnemonic(name, passphrase)` is process-internal for the sign layer; it never crosses the CLI boundary except via `exportWallet` when requested.
 
 ## Events
 

@@ -1,11 +1,13 @@
 import { join } from "node:path";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
-import { entropyToMnemonic, generateMnemonic, mnemonicToEntropy, validateMnemonic } from "@scure/bip39";
+import { HDKey } from "@scure/bip32";
+import { entropyToMnemonic, generateMnemonic, mnemonicToEntropy, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { CodedError, run, type Envelope } from "../../core/src/envelope.ts";
 import { walletHome } from "../../core/src/home.ts";
 import { encryptToV3, decryptFromV3, SCRYPT_DEFAULT, type KeystoreV3, type ScryptParams } from "./keystore.ts";
 import {
+  btcPrivateKey,
   deriveBtcAddress,
   deriveEvmAddress,
   type BtcAddressType,
@@ -151,5 +153,106 @@ export function getAddresses(q: AddressQuery): Promise<Envelope<Array<DerivedEvm
         ? deriveEvmAddress(mnemonic, start + i)
         : deriveBtcAddress(mnemonic, start + i, q.network ?? "bitcoin", q.addressType ?? "p2tr"),
     );
+  });
+}
+
+export interface ExportQuery {
+  name: string;
+  passphrase: string;
+  family: "evm" | "btc";
+  index?: number;
+  network?: BtcNetworkName;
+  addressType?: BtcAddressType;
+  /** If set, secrets are written here (mode 0600) and omitted from the envelope. */
+  outFile?: string;
+  includeMnemonic?: boolean;
+}
+
+export interface WalletExport {
+  name: string;
+  family: "evm" | "btc";
+  index: number;
+  path: string;
+  address: string;
+  /** Present only when not writing to outFile (or always inside the file). */
+  privateKey?: string;
+  network?: BtcNetworkName;
+  addressType?: BtcAddressType;
+  mnemonic?: string;
+  /** Absolute path when secrets were written to disk. */
+  file?: string;
+  warning: string;
+}
+
+function toHex(bytes: Uint8Array): string {
+  return `0x${Buffer.from(bytes).toString("hex")}`;
+}
+
+/**
+ * Export a derived account's address + private key (and optionally the mnemonic).
+ * Prefer --out so secrets land in a 0600 file instead of stdout/chat.
+ */
+export function exportWallet(q: ExportQuery): Promise<Envelope<WalletExport>> {
+  return run(LAYER, async () => {
+    const index = q.index ?? 0;
+    if (index < 0 || index > 1000) {
+      throw new CodedError("RANGE_INVALID", "index must be between 0 and 1000");
+    }
+    const mnemonic = await unlockMnemonic(q.name, q.passphrase);
+    const warning =
+      "SECRET material. Anyone with this private key (or mnemonic) controls the funds. Store offline; never commit or paste into untrusted chat.";
+
+    let payload: WalletExport;
+    if (q.family === "evm") {
+      const derived = deriveEvmAddress(mnemonic, index);
+      const path = derived.path;
+      const node = HDKey.fromMasterSeed(mnemonicToSeedSync(mnemonic)).derive(path);
+      if (!node.privateKey) throw new CodedError("KEY_DERIVE_FAILED", "no private key at EVM path");
+      payload = {
+        name: q.name,
+        family: "evm",
+        index,
+        path,
+        address: derived.address,
+        privateKey: toHex(node.privateKey),
+        warning,
+        ...(q.includeMnemonic ? { mnemonic } : {}),
+      };
+    } else {
+      const network = q.network ?? "bitcoin";
+      const addressType = q.addressType ?? "p2tr";
+      const derived = deriveBtcAddress(mnemonic, index, network, addressType);
+      const pk = btcPrivateKey(mnemonic, index, network, addressType);
+      payload = {
+        name: q.name,
+        family: "btc",
+        index,
+        path: derived.path,
+        address: derived.address,
+        privateKey: toHex(pk),
+        network,
+        addressType,
+        warning,
+        ...(q.includeMnemonic ? { mnemonic } : {}),
+      };
+    }
+
+    if (q.outFile) {
+      const abs = q.outFile.startsWith("/") ? q.outFile : join(process.cwd(), q.outFile);
+      writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600 });
+      return {
+        name: payload.name,
+        family: payload.family,
+        index: payload.index,
+        path: payload.path,
+        address: payload.address,
+        warning: payload.warning,
+        file: abs,
+        ...(payload.network !== undefined && { network: payload.network }),
+        ...(payload.addressType !== undefined && { addressType: payload.addressType }),
+      };
+    }
+
+    return payload;
   });
 }

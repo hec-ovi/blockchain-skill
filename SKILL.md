@@ -28,7 +28,11 @@ agent-wallet init
 
 Read `data.ready`, `data.nextActions`, `data.notes`. Do not hand-probe the install.
 
-**Passphrase** (signing verbs): `export AGENT_WALLET_PASSPHRASE=...` (>= 8 chars) or workspace `.env` (CLI loads cwd `.env`). Never paste into chat. Prefer durable `.env` over `/tmp`. On `PASSPHRASE_WRONG`, stop; never brute-force the keystore.
+**Passphrase** (signing verbs). Do this once, then stop touching it:
+
+1. If cwd `.env` already has `AGENT_WALLET_PASSPHRASE`, use it (CLI auto-loads `.env`). Do not invent another.
+2. Else create `.env` once with `AGENT_WALLET_PASSPHRASE=<random >=8 chars>` and `AGENT_WALLET_HOME=./.agent-wallet-data` (or keep default home). Never print the passphrase in chat.
+3. On `PASSPHRASE_WRONG`: stop. Do not brute-force, dump keystore JSON, or reverse-engineer the bundle.
 
 Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 
@@ -39,6 +43,7 @@ Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 | Session ready? | `init` |
 | New / restore wallet | `wallet-create` / `wallet-import` |
 | Receive address | `wallet-addresses` |
+| Export key / backup secrets | `wallet-export` (prefer `--out`) |
 | Balance / fees / tx / UTXOs | `balance` / `fees` / `tx` / `utxos` |
 | Pay someone (native, ERC-20, BTC) | `send` |
 | Same-chain token A → B | `swap-quote` then `swap` |
@@ -62,9 +67,12 @@ agent-wallet wallet-import --name main --mnemonic "..."
 agent-wallet wallet-list
 agent-wallet wallet-addresses --name main --family evm
 agent-wallet wallet-addresses --name main --family btc --network signet
+# secrets: prefer file (0600); only when the user asks
+agent-wallet wallet-export --name main --family evm --out ./wallet-export.json
+agent-wallet wallet-export --name main --family evm --include-mnemonic --out ./wallet-full.json
 ```
 
-Mnemonic is shown **ONCE**; tell the user to back it up; the keystore cannot recover it without the passphrase.
+Mnemonic is shown **ONCE** at create; tell the user to back it up; the keystore cannot recover it without the passphrase. `wallet-export` returns address + private key (and optional mnemonic). Prefer `--out <file>` so secrets go to a mode-0600 file; hand the user that file or its contents only if they asked. Never export unprompted.
 
 ### Read
 
@@ -134,7 +142,8 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 - Never re-bootstrap (curl/clone) when `dist/agent-wallet.mjs` is already in the skill pack.
 - Never default to mainnet silently; ask the network first.
 - Never put the passphrase in chat; use env or `.env`.
-- Never brute-force after `PASSPHRASE_WRONG`.
+- Never invent a new passphrase after `wallet-create`; one `.env` for the session/workspace.
+- Never brute-force after `PASSPHRASE_WRONG`; never `cat` keystore files to recover secrets.
 - Never `balance` with a wallet name; always an address.
 - Never `swap` when the user asked to transfer to someone; use `send` (`--token` if ERC-20).
 - Never `send` when they asked to convert A→B for themselves; use `swap`.

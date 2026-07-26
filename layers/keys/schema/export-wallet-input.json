@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "passphrase": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string",
+      "enum": [
+        "evm",
+        "btc"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "network": {
+      "type": "string",
+      "enum": [
+        "bitcoin",
+        "signet",
+        "testnet"
+      ]
+    },
+    "addressType": {
+      "type": "string",
+      "enum": [
+        "p2tr",
+        "p2wpkh"
+      ]
+    },
+    "outFile": {
+      "type": "string"
+    },
+    "includeMnemonic": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "passphrase",
+    "family"
+  ],
+  "additionalProperties": false,
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/keys/schema/export-wallet-input.json"
+}

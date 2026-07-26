@@ -57,6 +57,35 @@ export const addressListOutput = z.array(
   ]),
 );
 
+export const exportWalletInput = z
+  .object({
+    name: walletName,
+    passphrase: z.string(),
+    family: z.enum(["evm", "btc"]),
+    index: z.number().int().min(0).max(1000).optional(),
+    network: btcNetwork.optional(),
+    addressType: btcAddressType.optional(),
+    outFile: z.string().optional(),
+    includeMnemonic: z.boolean().optional(),
+  })
+  .strict();
+
+export const walletExportOutput = z
+  .object({
+    name: walletName,
+    family: z.enum(["evm", "btc"]),
+    index: z.number().int(),
+    path: z.string(),
+    address: z.string(),
+    privateKey: z.string().optional(),
+    network: btcNetwork.optional(),
+    addressType: btcAddressType.optional(),
+    mnemonic: z.string().optional(),
+    file: z.string().optional(),
+    warning: z.string(),
+  })
+  .strict();
+
 export const schemas: Record<string, z.ZodType> = {
   "create-wallet-input": createWalletInput,
   "import-wallet-input": importWalletInput,
@@ -64,4 +93,6 @@ export const schemas: Record<string, z.ZodType> = {
   "wallet-list-output": walletListOutput,
   "address-query-input": addressQueryInput,
   "address-list-output": addressListOutput,
+  "export-wallet-input": exportWalletInput,
+  "wallet-export-output": walletExportOutput,
 };

@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { encryptToV3, decryptFromV3 } from "../src/keystore.ts";
 import { deriveBtcAddress, deriveEvmAddress } from "../src/derive.ts";
-import { createWallet, getAddresses, importWallet, listWallets, unlockMnemonic } from "../src/wallet.ts";
-import { addressListOutput, walletCreatedOutput, walletListOutput } from "../src/contract.ts";
+import { createWallet, exportWallet, getAddresses, importWallet, listWallets, unlockMnemonic } from "../src/wallet.ts";
+import { addressListOutput, walletCreatedOutput, walletExportOutput, walletListOutput } from "../src/contract.ts";
 import { envelopeShape } from "../../core/src/envelope.ts";
 
 const FAST = { n: 1024, p: 1, r: 8 };
@@ -21,6 +21,34 @@ beforeEach(() => {
 afterEach(() => {
   delete process.env["AGENT_WALLET_HOME"];
   rmSync(home, { recursive: true, force: true });
+});
+
+describe("exportWallet", () => {
+  it("exports EVM address and private key; outFile redacts secrets from envelope", async () => {
+    await importWallet({ name: "w", passphrase: "export-pass-ok", mnemonic: DEV_MNEMONIC, scrypt: FAST });
+    const outPath = join(home, "secret.json");
+    const fileEnv = await exportWallet({
+      name: "w",
+      passphrase: "export-pass-ok",
+      family: "evm",
+      outFile: outPath,
+      includeMnemonic: true,
+    });
+    expect(fileEnv.ok).toBe(true);
+    expect(fileEnv.data?.privateKey).toBeUndefined();
+    expect(fileEnv.data?.mnemonic).toBeUndefined();
+    expect(fileEnv.data?.address).toBe("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+    expect(fileEnv.data?.file).toBe(outPath);
+    walletExportOutput.parse(fileEnv.data);
+    const disk = JSON.parse(readFileSync(outPath, "utf8"));
+    expect(disk.privateKey).toMatch(/^0x[0-9a-f]{64}$/);
+    expect(disk.mnemonic.split(" ")).toHaveLength(12);
+    expect(disk.address).toBe(fileEnv.data?.address);
+    expect(statSync(outPath).mode & 0o777).toBe(0o600);
+
+    const stdoutEnv = await exportWallet({ name: "w", passphrase: "export-pass-ok", family: "evm" });
+    expect(stdoutEnv.data?.privateKey).toMatch(/^0x[0-9a-f]{64}$/);
+  });
 });
 
 describe("keystore v3", () => {

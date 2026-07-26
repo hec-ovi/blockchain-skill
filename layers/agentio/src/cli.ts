@@ -1,4 +1,4 @@
-import { createWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
+import { createWallet, exportWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
 import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
@@ -107,6 +107,24 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["type"] !== undefined && { addressType: flags["type"] as never }),
           ...(flags["start"] !== undefined && { start: Number(flags["start"]) }),
           ...(flags["count"] !== undefined && { count: Number(flags["count"]) }),
+        }),
+      );
+    },
+  },
+  "wallet-export": {
+    summary: "Export address + private key (secrets). Prefer --out file.json (0600). Optional --include-mnemonic --index N --family evm|btc",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      return emit(
+        await exportWallet({
+          name: flags["name"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          family: flags["family"] === "btc" ? "btc" : "evm",
+          ...(flags["index"] !== undefined && { index: Number(flags["index"]) }),
+          ...(flags["network"] !== undefined && { network: flags["network"] as never }),
+          ...(flags["type"] !== undefined && { addressType: flags["type"] as never }),
+          ...(flags["out"] !== undefined && { outFile: flags["out"] }),
+          ...(flags["include-mnemonic"] !== undefined && { includeMnemonic: true }),
         }),
       );
     },

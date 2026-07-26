@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.5
+
+- `wallet-export`: address + private key (optional mnemonic); prefer `--out` file mode 0600.
+
 ## 0.3.4
 
 - Vendor solc beside the CLI so skill-pack installs can compile without a local node_modules.

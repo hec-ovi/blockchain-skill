@@ -1,5 +1,5 @@
 {
   "name": "agent-wallet",
   "description": "Non-custodial agent wallet: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain.",
-  "version": "0.3.4"
+  "version": "0.3.5"
 }
