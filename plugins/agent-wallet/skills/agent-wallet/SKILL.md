@@ -55,6 +55,10 @@ Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 
 `send` = transfer to an address. `swap` = convert tokens for yourself. `bridge` = change chain. Never default to mainnet silently; ask which network; state it in answers.
 
+**Amounts:** never invent vague sizes ("tiny", "a bit"). Use an explicit number the user gave, or pick a concrete value and state it (e.g. `0.00001` ETH display, or raw base units for swap/bridge). Leave gas headroom on the balance.
+
+**Use this CLI only** for wallet/chain ops. Do not quote swaps via random web APIs (0x, Uniswap web, curl to aggregators). `swap-quote` / `swap` on the CLI are the path.
+
 ## Commands
 
 Examples use `agent-wallet`; substitute your resolved CLI. Chain = name (`sepolia`, `base`, `ethereum`) or id. One mnemonic → same EVM address on every EVM chain.
