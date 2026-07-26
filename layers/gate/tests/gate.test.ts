@@ -23,16 +23,10 @@ afterEach(() => {
 });
 
 describe("gate defaults (no config file)", () => {
-  it("allows testnets, denies every mainnet with an actionable hint", async () => {
-    for (const chain of [sepolia, signet]) {
+  it("allows testnets and mainnets by default", async () => {
+    for (const chain of [sepolia, signet, mainnet, bitcoin]) {
       const env = await gateCheck({ kind: "send", chain, valueBaseUnits: "1000" });
-      expect(env.ok).toBe(true);
-      expect(gateVerdictOutput.parse(env.data).mainnet).toBe(false);
-    }
-    for (const chain of [mainnet, bitcoin]) {
-      const env = await gateCheck({ kind: "send", chain, valueBaseUnits: "1000" });
-      expect(env.error?.code).toBe("GATE_DENIED");
-      expect(env.error?.hint).toContain("allowMainnet");
+      expect(env.ok, JSON.stringify(env.error)).toBe(true);
       expect(envelopeShape.safeParse(env).success).toBe(true);
     }
   });
@@ -44,15 +38,16 @@ describe("gate defaults (no config file)", () => {
 });
 
 describe("gate config", () => {
-  it("allowMainnet=true opens mainnet; allowedChains opens one chain only", async () => {
-    saveConfig({ gate: { allowMainnet: true } });
-    expect((await gateCheck({ kind: "swap", chain: mainnet })).ok).toBe(true);
+  it("allowMainnet=false locks mainnet; allowedChains can re-open specific chains", async () => {
+    saveConfig({ gate: { allowMainnet: false } });
+    expect((await gateCheck({ kind: "swap", chain: mainnet })).error?.code).toBe("GATE_DENIED");
+    expect((await gateCheck({ kind: "send", chain: sepolia })).ok).toBe(true);
 
-    saveConfig({ gate: { allowedChains: [1] } });
+    saveConfig({ gate: { allowMainnet: false, allowedChains: [1] } });
     expect((await gateCheck({ kind: "send", chain: mainnet })).ok).toBe(true);
     expect((await gateCheck({ kind: "send", chain: bitcoin })).error?.code).toBe("GATE_DENIED");
 
-    saveConfig({ gate: { allowedChains: ["bitcoin"] } });
+    saveConfig({ gate: { allowMainnet: false, allowedChains: ["bitcoin"] } });
     expect((await gateCheck({ kind: "send", chain: bitcoin })).ok).toBe(true);
   });
 

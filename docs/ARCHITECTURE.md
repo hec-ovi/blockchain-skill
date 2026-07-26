@@ -61,7 +61,7 @@ Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` 
 
 - Keystore: mnemonic encrypted to Web3 Secret Storage v3 (scrypt) using ethereum-cryptography primitives; interops with `cast wallet import` and geth. Passphrase from `AGENT_WALLET_PASSPHRASE` or `--passphrase`; never written to disk or logs.
 - Data dir: `~/.agent-wallet/` (override `AGENT_WALLET_HOME`): `keystore/`, `state/`, `cache/`, `config.json`.
-- Gate defaults: testnets allowed, mainnet denied until `config.json` opt-in. Every send/swap/deploy/write passes the gate before sign; deny includes the config change that would allow it.
+- Gate defaults: mainnet and testnets allowed. Set `gate.allowMainnet=false` to lock mainnets. Every send/swap/deploy/write still passes the gate before sign (caps / denylist).
 - External content (RPC responses, fetched contract source) is untrusted data: never executed as code.
 
 ## Skills (context engineering)
@@ -88,7 +88,7 @@ Agent flow: resolve CLI (PATH or skill-pack launcher / `dist/agent-wallet.mjs`) 
 
 - Default `npm test`: build bundle, vitest (schema/contract, offline unit, CLI e2e, import boundary, distribution), `tests/check_skill.sh`.
 - Send layer: offline gate denials and a full signet transfer with mocked Esplora (sign + broadcast path without a live node).
-- Opt-in live: `RUN_LIVE=1` for public testnet reads/quotes and self-funded Base Sepolia e2e (CDP key).
+- Opt-in live: `RUN_LIVE=1` for public testnet reads/quotes.
 
 ## Out of scope for now
 

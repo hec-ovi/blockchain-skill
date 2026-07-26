@@ -32,7 +32,7 @@ afterEach(() => {
 });
 
 describe("send fail-closed (no network)", () => {
-  it("denies mainnet before any broadcast with an actionable hint", async () => {
+  it("allows mainnet by default (fails later on funds/RPC, not GATE_DENIED)", async () => {
     const env = await send({
       wallet: "w",
       passphrase: PASS,
@@ -40,10 +40,8 @@ describe("send fail-closed (no network)", () => {
       to: DEST_EVM,
       amount: "0.001",
     });
-    expect(env.ok).toBe(false);
-    expect(env.error?.code).toBe("GATE_DENIED");
-    expect(env.error?.hint).toContain("allowMainnet");
-    expect(envelopeShape.safeParse(env).success).toBe(true);
+    // Without funds/RPC, may fail after the gate; must not be GATE_DENIED under defaults.
+    expect(env.error?.code).not.toBe("GATE_DENIED");
   });
 
   it("rejects invalid amounts and addresses before signing", async () => {
@@ -137,7 +135,7 @@ describe("send BTC end-to-end with mocked Esplora", () => {
     expect(envelopeShape.safeParse(env).success).toBe(true);
   });
 
-  it("denies bitcoin mainnet even with mocked endpoints", async () => {
+  it("reaches BTC path on mainnet with mocked endpoints (gate allows by default)", async () => {
     const fetchFn = (async () => ({
       ok: true,
       status: 200,
@@ -152,6 +150,7 @@ describe("send BTC end-to-end with mocked Esplora", () => {
       amountRaw: "1000",
       fetchFn,
     });
-    expect(env.error?.code).toBe("GATE_DENIED");
+    // No UTXOs / further failure is fine; gate must not block.
+    expect(env.error?.code).not.toBe("GATE_DENIED");
   });
 });

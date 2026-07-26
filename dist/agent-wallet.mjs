@@ -75956,7 +75956,7 @@ function loadConfig() {
 // layers/gate/src/policy.ts
 var OPERATION_KINDS = ["send", "sign", "deploy", "contract-write", "swap"];
 var gateConfigSchema = external_exports.object({
-  allowMainnet: external_exports.boolean().default(false),
+  allowMainnet: external_exports.boolean().default(true),
   allowedChains: external_exports.array(external_exports.union([external_exports.number().int(), external_exports.string()])).default([]),
   maxValueWei: external_exports.string().regex(/^\d+$/).nullable().default(null),
   maxAmountSats: external_exports.string().regex(/^\d+$/).nullable().default(null)
@@ -75965,7 +75965,7 @@ function loadGateConfig() {
   const raw = loadConfig()["gate"] ?? {};
   const parsed = gateConfigSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new CodedError("GATE_CONFIG_INVALID", `config.json gate section is malformed: ${parsed.error.issues[0]?.message ?? "unknown"}`, "Fix or delete the gate section; defaults are safe (testnets only)");
+    throw new CodedError("GATE_CONFIG_INVALID", `config.json gate section is malformed: ${parsed.error.issues[0]?.message ?? "unknown"}`, "Fix or delete the gate section");
   }
   return parsed.data;
 }
@@ -75979,7 +75979,7 @@ function decide(op, cfg = loadGateConfig()) {
   if (!op.chain.testnet && !cfg.allowMainnet && !explicitlyAllowed) {
     throw new CodedError(
       "GATE_DENIED",
-      `${kind} on ${op.chain.name} is blocked: mainnet operations are off by default`,
+      `${kind} on ${op.chain.name} is blocked: mainnet is disabled in config`,
       `To allow, edit $AGENT_WALLET_HOME/config.json: set {"gate":{"allowMainnet":true}} or add ${JSON.stringify(chainKey)} to gate.allowedChains`
     );
   }
@@ -81099,7 +81099,7 @@ import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as rea
 import { join as join10 } from "node:path";
 var LAYER8 = { layer: "agentio", backend: "init" };
 function toolkitVersion() {
-  const bundled = "0.4.1";
+  const bundled = "0.4.2";
   if (bundled && bundled.length > 0) return bundled;
   try {
     const pkgPath = new URL("../../../package.json", import.meta.url);
@@ -81170,7 +81170,7 @@ function initToolkit() {
       nextActions.push("agent-wallet wallet-list");
       nextActions.push("agent-wallet wallet-addresses --name main --family evm");
     }
-    notes.push("Mainnet is denied by default. Testnets work out of the box.");
+    notes.push("Mainnet and testnets are allowed by default. Set gate.allowMainnet=false in config.json to lock mainnets.");
     notes.push("Every balance, send, or deploy is scoped to ONE network; ask if the user did not name one.");
     notes.push("Fund testnets by receiving from an external wallet or a public testnet drip site; this toolkit does not drip gas.");
     if (nextActions.length === 0) {

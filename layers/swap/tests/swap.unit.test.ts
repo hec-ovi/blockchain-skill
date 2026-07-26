@@ -89,7 +89,8 @@ describe("swap quotes (fixtures, no network)", () => {
 });
 
 describe("swap execution safety", () => {
-  it("gate denies a mainnet swap by default (nothing signed or sent)", async () => {
+  it("gate denies a mainnet swap when allowMainnet is false", async () => {
+    saveConfig({ gate: { allowMainnet: false } });
     const fetchFn = api([
       { match: "/routes?", body: { data: { routeSummary: { amountOut: "3010000000" } } } },
       { match: "/route/build", body: { data: { data: "0xdeadbeef", routerAddress: "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5" } } },

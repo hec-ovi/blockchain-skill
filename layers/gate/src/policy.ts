@@ -7,7 +7,7 @@ export type OperationKind = (typeof OPERATION_KINDS)[number];
 
 export const gateConfigSchema = z
   .object({
-    allowMainnet: z.boolean().default(false),
+    allowMainnet: z.boolean().default(true),
     allowedChains: z.array(z.union([z.number().int(), z.string()])).default([]),
     maxValueWei: z.string().regex(/^\d+$/).nullable().default(null),
     maxAmountSats: z.string().regex(/^\d+$/).nullable().default(null),
@@ -35,14 +35,15 @@ export function loadGateConfig(): GateConfig {
   const raw = (loadConfig()["gate"] ?? {}) as Record<string, unknown>;
   const parsed = gateConfigSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new CodedError("GATE_CONFIG_INVALID", `config.json gate section is malformed: ${parsed.error.issues[0]?.message ?? "unknown"}`, "Fix or delete the gate section; defaults are safe (testnets only)");
+    throw new CodedError("GATE_CONFIG_INVALID", `config.json gate section is malformed: ${parsed.error.issues[0]?.message ?? "unknown"}`, "Fix or delete the gate section");
   }
   return parsed.data;
 }
 
 /**
- * Deterministic allow/deny. Fail closed: unknown kinds, mainnet without
- * opt-in, and cap breaches all deny with the exact config change needed.
+ * Deterministic allow/deny. Mainnet is allowed by default. Set
+ * gate.allowMainnet=false (and optionally allowedChains) to lock mainnets down.
+ * Unknown kinds and cap breaches still deny with an actionable hint.
  */
 export function decide(op: OperationRequest, cfg: GateConfig = loadGateConfig()): GateVerdict {
   if (!(OPERATION_KINDS as readonly string[]).includes(op.kind)) {
@@ -55,7 +56,7 @@ export function decide(op: OperationRequest, cfg: GateConfig = loadGateConfig())
   if (!op.chain.testnet && !cfg.allowMainnet && !explicitlyAllowed) {
     throw new CodedError(
       "GATE_DENIED",
-      `${kind} on ${op.chain.name} is blocked: mainnet operations are off by default`,
+      `${kind} on ${op.chain.name} is blocked: mainnet is disabled in config`,
       `To allow, edit $AGENT_WALLET_HOME/config.json: set {"gate":{"allowMainnet":true}} or add ${JSON.stringify(chainKey)} to gate.allowedChains`,
     );
   }

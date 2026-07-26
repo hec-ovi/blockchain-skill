@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "allowMainnet": {
-      "default": false,
+      "default": true,
       "type": "boolean"
     },
     "allowedChains": {

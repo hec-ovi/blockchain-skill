@@ -61,7 +61,7 @@ for f in "${ALL[@]}"; do
   grep -qiF 'never default to mainnet silently' "$f" || err "$f lost the ask-the-network rule"
   grep -qF 'Mnemonic is shown **ONCE**' "$f" || err "$f lost the mnemonic-backup rule"
   grep -qF 'It cannot be talked out of a decision' "$f" || err "$f lost the deterministic-gate rule"
-  grep -qF 'Mainnet is DENIED by default' "$f" || err "$f lost the mainnet-denied default"
+  grep -qF 'Mainnet and testnets are allowed by default' "$f" || err "$f lost the mainnet-allowed default"
   grep -qF 'keystore cannot recover it without the passphrase' "$f" || err "$f lost the no-recovery rule"
   grep -qF 'Never call an unknown contract before `contract-learn`' "$f" || err "$f lost the learn-before-call rule"
   grep -qF 'agent-wallet init' "$f" || err "$f lost the init-first rule"

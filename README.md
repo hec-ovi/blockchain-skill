@@ -57,7 +57,7 @@ Every default backend is keyless. Optional Etherscan key only raises contract-le
 
 ## Safety
 
-Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":{"allowMainnet":true}}` or a per-chain allowlist, plus optional per-tx caps). Every state-changing operation passes a deterministic gate before anything is signed. Reads are never gated.
+Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"allowMainnet":false}}` in `~/.agent-wallet/config.json` (optional per-chain allowlist and per-tx caps). Every state-changing operation still passes the gate before sign; reads are never gated.
 
 ## What we verified
 

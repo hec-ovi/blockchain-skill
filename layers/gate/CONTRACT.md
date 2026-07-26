@@ -22,7 +22,7 @@ None.
 
 ## Errors
 
-`GATE_DENIED` (mainnet without opt-in), `GATE_CAPPED` (per-tx cap exceeded), `GATE_UNKNOWN_KIND` (fail closed on unrecognized operations), `GATE_CONFIG_INVALID`, `AMOUNT_INVALID`.
+`GATE_DENIED` (mainnet locked via config), `GATE_CAPPED` (per-tx cap exceeded), `GATE_UNKNOWN_KIND` (fail closed on unrecognized operations), `GATE_CONFIG_INVALID`, `AMOUNT_INVALID`.
 
 ## Dependencies
 
@@ -30,7 +30,7 @@ None.
 
 ## Invariants
 
-- Defaults are safe: with no config file, testnets and local chains are allowed, every mainnet is denied, no caps.
+- Defaults: with no config file, testnets and mainnets are allowed, no per-tx caps. Set `allowMainnet: false` to lock mainnets.
 - Decisions are pure functions of (operation, config); same inputs, same verdict.
 - Caps compare base units (wei/sats) as bigints; native value only (ERC-20 token amounts are not capped by this version).
 

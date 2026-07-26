@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Gate default: mainnet allowed (set allowMainnet false to lock).
+
 ## 0.4.1
 
 - Removed faucet (CDP) layer and CLI verb. Fund testnets externally.

@@ -127,8 +127,7 @@ Never call an unknown contract before `contract-learn`; check `verified`. Use de
 
 Gate is deterministic code before sign/broadcast. It cannot be talked out of a decision. Prompt text is not enforcement.
 
-- Mainnet is DENIED by default. Testnets (sepolia, base-sepolia, signet) allowed.
-- Config: `~/.agent-wallet/config.json` → `gate.allowMainnet`, `gate.allowedChains`, `gate.maxValueWei` / `maxAmountSats`.
+- Mainnet and testnets are allowed by default. To lock mainnets: `{"gate":{"allowMainnet":false}}` in `~/.agent-wallet/config.json` (optional `allowedChains`, caps).
 - Gated: send, swap, wrap, unwrap, contract-deploy, contract-write. Reads and quotes are not.
 - Keys: `keystore/<name>.json` Web3 v3 scrypt; passphrase never logged.
 
@@ -143,6 +142,6 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 - Never `balance` with a wallet name; always an address.
 - Never `swap` when the user asked to transfer to someone; use `send` (`--token` if ERC-20).
 - Never `send` when they asked to convert A→B for themselves; use `swap`.
-- Never retry `GATE_DENIED` except via config.json.
+- On `GATE_DENIED`, fix `config.json` (mainnet was locked by the user) or use an allowed chain.
 - Never execute a stale swap quote; re-quote.
 - Never call an unknown contract before `contract-learn`.

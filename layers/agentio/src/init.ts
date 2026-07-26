@@ -107,7 +107,7 @@ export function initToolkit(): Promise<Envelope<InitReport>> {
       nextActions.push("agent-wallet wallet-list");
       nextActions.push("agent-wallet wallet-addresses --name main --family evm");
     }
-    notes.push("Mainnet is denied by default. Testnets work out of the box.");
+    notes.push("Mainnet and testnets are allowed by default. Set gate.allowMainnet=false in config.json to lock mainnets.");
     notes.push("Every balance, send, or deploy is scoped to ONE network; ask if the user did not name one.");
     notes.push("Fund testnets by receiving from an external wallet or a public testnet drip site; this toolkit does not drip gas.");
 
