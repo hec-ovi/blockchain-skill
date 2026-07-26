@@ -1,238 +1,261 @@
 ---
 name: agent-wallet
-description: Operate a non-custodial blockchain wallet directly on-chain (EVM and Bitcoin), no exchange or MetaMask. Use to create or import a wallet, check balances, receive, send native coin / ERC-20 / BTC, swap tokens, bridge across chains, and author, deploy, verify, call, or write Solidity smart contracts. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, swap, bridge, Solidity, contract, on-chain, testnet, mainnet.
+description: Operate a non-custodial blockchain wallet directly on-chain (EVM and Bitcoin), no exchange or MetaMask. Use to create or import a wallet, check balances, receive, send native coin / ERC-20 / BTC, swap tokens, bridge across chains, fund testnets, and author, deploy, verify, call, or write Solidity smart contracts. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, transfer, swap, bridge, trade, Solidity, contract, on-chain, testnet, mainnet, faucet, sepolia.
 ---
 
 # agent-wallet
 
-This skill is instructions only. Every operation runs through the `agent-wallet` CLI (one Node process per verb, JSON on stdout, then exit). Keys stay local and encrypted. No exchange, no browser extension, no custodial service.
+You are the operator of a local non-custodial toolkit. This skill is instructions only; every on-chain action runs through the `agent-wallet` CLI (one process per verb, JSON envelope on stdout, exit). No exchange, no browser wallet, no custodial API for keys.
 
-Every response is one JSON envelope `{ok, data, error, meta}`. On `ok:false`, read `error.hint` and act on it.
+Envelope: `{ok, data, error, meta}`. On `ok:false`, obey `error.hint`. Do not invent a second tool path.
+
+## Expert operating protocol
+
+1. **Resolve CLI once** (section Setup) and reuse that exact command.
+2. **`init` once per session** before keystore or chain work.
+3. **Confirm network** if the user did not name one; never default to mainnet silently. State the network in every answer that involves balances or txs.
+4. **Route the user intent** to the right verb (table below). Prefer the smallest correct path.
+5. **Read before write.** Quote before swap/bridge. `contract-learn` before calling an unknown contract. Balance before send.
+6. **Gate is law.** Mainnet is DENIED by default. `GATE_DENIED` is fixed only by editing `~/.agent-wallet/config.json` (or `$AGENT_WALLET_HOME/config.json`), never by arguing in chat.
+7. **Report concrete results:** addresses, amounts with units, tx hashes, explorer links when `data.explorer` exists, and the network name.
+
+### Intent → verb (route here first)
+
+| User wants | Do this |
+|---|---|
+| Set up / is it working? | `init` then `version` if needed |
+| New wallet / backup seed | `wallet-create` (show mnemonic once, tell user to back it up) |
+| Restore seed | `wallet-import` |
+| "My address" / receive | `wallet-addresses` (EVM or BTC) |
+| Balance / holdings | `wallet-addresses` then `balance <chain> <address>` (+ `--token` for ERC-20) |
+| Gas price / fees | `fees <chain>` |
+| BTC UTXOs | `utxos <btc-network> <address>` |
+| Tx status | `tx <chain> <hash>` |
+| Transfer / pay / send ETH or BTC | `send` |
+| Transfer ERC-20 | `send` with `--token 0x..` |
+| Swap / trade / "change token A to B" | `swap-quote` then `swap` (same chain) |
+| Move value to another chain | `bridge-quote` then `bridge` then `bridge-status` |
+| Free testnet gas | `faucet` (CDP keys required) |
+| What does this contract do? | `contract-learn` |
+| Read contract state | `contract-call` (after ABI from learn/deploy) |
+| Write contract state | `contract-write` |
+| Deploy new contract | `contract-compile` then `contract-deploy` |
+| Is RPC alive? | `chain-check` |
+| Resolve chain id/RPC | `chain-resolve` |
+
+Native ETH transfers use `send`. Token→token on the **same** chain uses `swap`. Cross-chain uses `bridge`. Do not use `swap` for "send USDC to my friend" (that is `send --token`).
 
 ## Setup (first use only)
 
-Requires Node >= 22.18. No npm install step when this skill pack is already on disk (it ships a self-contained `dist/agent-wallet.mjs`).
+Requires Node >= 22.18. When this skill pack is installed, it ships `dist/agent-wallet.mjs` (no npm install required).
 
 ### 1. Resolve the CLI (once per session)
 
-Pick the first that works and reuse that exact command for every later verb:
+Pick the first that works; reuse it for every later verb:
 
 ```sh
-# A) on PATH (npm i -g agent-wallet, or a prior host install)
 command -v agent-wallet
-
-# B) skill pack installed by noob /skills add (workspace-relative)
 test -x .noob/skills/agent-wallet/agent-wallet && echo .noob/skills/agent-wallet/agent-wallet
-
-# C) direct Node entry next to this skill
 test -f .noob/skills/agent-wallet/dist/agent-wallet.mjs && echo "node .noob/skills/agent-wallet/dist/agent-wallet.mjs"
-
-# D) this repo checked out as the workspace
 test -x ./agent-wallet && echo ./agent-wallet
 test -f ./dist/agent-wallet.mjs && echo "node ./dist/agent-wallet.mjs"
-
-# E) optional registry one-shot when published (needs network + npm)
-# npx --yes agent-wallet-skill@0.3.1
+# optional when published: npx --yes agent-wallet-skill@0.3.2
 ```
 
-Examples below write `agent-wallet`; replace with your resolved form (for example `.noob/skills/agent-wallet/agent-wallet` or `node .noob/skills/agent-wallet/dist/agent-wallet.mjs`).
+Below, `agent-wallet` means your resolved form.
 
-### 2. Run init once
+### 2. init (session doctor)
 
 ```sh
 agent-wallet init
 ```
 
-Read `data.ready`, `data.nextActions`, and `data.notes`. Do not probe the install by hand (`which`, `ls`, random version checks) instead of init. Init prepares `~/.agent-wallet/` (or `$AGENT_WALLET_HOME`) and reports what is missing.
+Read `data.ready`, `data.nextActions`, `data.notes`, `data.passphraseSet`, `data.walletCount`, `data.cdpKeySet`. Do not replace init with ad-hoc probes.
 
-### 3. Passphrase (required before any keystore verb)
+### 3. Passphrase
 
 ```sh
-export AGENT_WALLET_PASSPHRASE=...   # never paste into chat; at least 8 characters
+export AGENT_WALLET_PASSPHRASE=...   # never paste into chat; >= 8 chars
 ```
 
-Prefer a durable workspace `.env` (gitignored) with `AGENT_WALLET_PASSPHRASE=...` so later turns reuse it. The CLI loads `.env` from the current directory automatically. Do not invent a random passphrase into `/tmp` and lose it. Do not override an existing `AGENT_WALLET_PASSPHRASE` already set in the environment or `.env`.
+Prefer a gitignored workspace `.env` with `AGENT_WALLET_PASSPHRASE=...` (CLI auto-loads cwd `.env`). Do not invent a random passphrase into `/tmp` and lose it. Do not override an existing env/`.env` passphrase.
 
-If a verb returns `PASSPHRASE_WRONG` or `PASSPHRASE_TOO_SHORT`, stop. Do not brute-force the keystore, dump keystore JSON, or reverse-engineer the bundle. Fix the passphrase or create a new wallet name with a known passphrase.
+`PASSPHRASE_WRONG` / `PASSPHRASE_TOO_SHORT`: stop. No brute-force, no dumping keystore JSON, no reverse-engineering the bundle.
 
-Then re-run `agent-wallet init` if you want an updated report. Mainnet is DENIED by default; testnets work immediately (see Safety model).
+### 4. Optional keys
 
-### 4. Optional faucet keys
-
-Headless testnet funding needs a free CDP key (`CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`). Without them, wallet create / balance / send still work; only `faucet` fails.
+| Env | Enables |
+|---|---|
+| `AGENT_WALLET_PASSPHRASE` | All signing verbs |
+| `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` | `faucet` |
+| `ETHERSCAN_API_KEY` | Faster/extra contract verification lookup |
+| `LIFI_API_KEY` | Higher bridge rate limits (not required) |
 
 ## Chain references
 
-Any chain works: a name (`ethereum`, `base`, `sepolia`), a numeric id (`8453`), or a Bitcoin network (`bitcoin`, `signet`, `testnet`). Amounts are decimal strings in base units (wei/sats) unless a verb takes display units.
+Names (`ethereum`, `base`, `sepolia`, `base-sepolia`), numeric ids (`1`, `8453`, `11155111`), or Bitcoin (`bitcoin`, `signet`, `testnet`). One address holds different balances per network. Always scope reads/writes to one network and name it in the answer.
 
-Every balance, read, send, or contract call is scoped to ONE network. The same address holds different funds on each chain. If the user has not named a network, ask which one; never default to mainnet silently. State the network in your answer.
+Common testnets (allowed by default): `sepolia`, `base-sepolia`, Bitcoin `signet`. Mainnets denied until config opt-in.
 
-Start every task with `agent-wallet init` if you have not this session, confirm a wallet exists, then jump to the operation.
+## Verb catalog (complete)
 
-## 1. Wallet setup
+### Session
 
-1. Ensure `AGENT_WALLET_PASSPHRASE` is exported (the keystore encryption passphrase).
-2. Create a wallet (new mnemonic):
-   `agent-wallet wallet-create --name main`
-   The response shows the mnemonic ONCE. Tell the user to back it up; it cannot be recovered from the keystore without the passphrase.
-3. Or import an existing seed:
-   `agent-wallet wallet-import --name main --mnemonic "word1 ... word12"`
-4. List wallets: `agent-wallet wallet-list`.
-5. Get a receive address:
-   - EVM: `agent-wallet wallet-addresses --name main --family evm`
-   - Bitcoin: `agent-wallet wallet-addresses --name main --family btc --network bitcoin` (taproot by default; add `--type p2wpkh` for native segwit)
+- `agent-wallet version`
+- `agent-wallet init`
+- `agent-wallet help`
 
-Notes:
+### Wallet
 
-- One mnemonic covers every EVM chain and Bitcoin. The same wallet's EVM address is identical on all EVM chains.
-- `--count N` and `--start i` derive multiple addresses.
+```sh
+agent-wallet wallet-create --name main
+agent-wallet wallet-import --name main --mnemonic "word1 ... word12"
+agent-wallet wallet-list
+agent-wallet wallet-addresses --name main --family evm
+agent-wallet wallet-addresses --name main --family btc --network signet
+agent-wallet wallet-addresses --name main --family btc --network bitcoin --type p2wpkh
+```
 
-## 2. Balances and reads
+One mnemonic covers all EVM chains (same 0x address everywhere) and Bitcoin (different derivation). Mnemonic is shown **ONCE** at create; tell the user to back it up; the keystore cannot recover it without the passphrase.
 
-Balances and every read are per-network: an address holds different amounts on Ethereum, Base, a testnet, or a local node. If the user has not said which network, ASK before checking; do not silently assume mainnet. Always state which network a balance refers to (the result's `meta.chain`).
+### Chains and reads
 
-- Balance: `agent-wallet balance <chain> <address>` (add `--token 0x..` for an ERC-20). **Requires the 0x address**, not a wallet name. There is no `--wallet` flag on balance. Resolve the address first with `wallet-addresses --name main --family evm` (needs passphrase) or reuse the address from `wallet-create` / a prior turn.
-- Fees: `agent-wallet fees <chain>`.
-- Bitcoin UTXOs: `agent-wallet utxos <btc-network> <address>`.
-- Transaction: `agent-wallet tx <chain> <hash-or-txid>`.
-- `wallet-list` does not need a passphrase; unlocking does.
+```sh
+agent-wallet chain-resolve sepolia
+agent-wallet chain-check sepolia
+agent-wallet balance sepolia 0xADDRESS
+agent-wallet balance sepolia 0xADDRESS --token 0xTOKEN
+agent-wallet fees sepolia
+agent-wallet utxos signet tb1p...
+agent-wallet tx sepolia 0xHASH
+```
 
-## 3. Send
+`balance` requires the **address**, not a wallet name (no `--wallet` on balance). Resolve with `wallet-addresses` first if needed. `wallet-list` does not need a passphrase.
 
-Native coin:
-`agent-wallet send <chain> --to 0x.. --amount 0.5 --wallet main --wait`
+### Send (transfer native, ERC-20, or BTC)
 
-ERC-20 token (amount in display units of the token):
-`agent-wallet send <chain> --to 0x.. --amount 100 --token 0xTOKEN --wallet main`
+```sh
+# native
+agent-wallet send sepolia --to 0xTO --amount 0.01 --wallet main --wait
+# ERC-20 (amount in token display units)
+agent-wallet send sepolia --to 0xTO --amount 10 --token 0xTOKEN --wallet main --wait
+# base units / sweep BTC
+agent-wallet send sepolia --to 0xTO --amount-raw 1000000000000000 --wallet main
+agent-wallet send signet --to tb1p... --amount-raw all --wallet main
+```
 
-Bitcoin (amount in BTC, or base units / sweep):
-`agent-wallet send bitcoin --to bc1p.. --amount 0.001 --wallet main`
-`agent-wallet send signet --to tb1p.. --amount-raw all --wallet main` (sweep)
+- `--amount` = display units (ETH, token units, BTC). `--amount-raw` = wei / token raw / sats (`all` = BTC sweep).
+- EVM `--wait` blocks for receipt (`confirmed` / `reverted`). BTC always returns `broadcast` + txid; poll `tx`.
+- `INSUFFICIENT_FUNDS` and `GATE_DENIED` stop before broadcast when possible.
 
-Expect:
+### Swap (same-chain token → token)
 
-- Mainnet is denied by default; a `GATE_DENIED` error's hint shows the exact config change to allow it.
-- EVM `--wait` returns a confirmed/reverted status; without it you get `broadcast` plus a hash.
-- Bitcoin returns `broadcast` plus a txid; track with `agent-wallet tx <network> <txid>`.
-- Insufficient funds are caught before broadcast (`INSUFFICIENT_FUNDS`).
+Amounts for swap verbs are **base units** of the sell token (not display ETH).
 
-## 4. Swap
+```sh
+agent-wallet swap-quote <chain> --sell 0xSELL --buy 0xBUY --amount 1000000000000000000 --from 0xYOU
+agent-wallet swap <chain> --sell 0xSELL --buy 0xBUY --amount 1000000000000000000 --wallet main --wait
+# optional: --adapter cow|kyber|uniswap  --slippage 50
+```
 
-Non-custodial: you approve the aggregator's spender and either sign a router transaction (Kyber) or sign an intent order that solvers fill (CoW). Amounts are base units of the sell token.
+- Always quote first; check `buyAmount` / `minBuyAmount`; then execute if the user wants the trade.
+- Prefer CoW where available (gasless settlement, limit price enforced). Kyber executes a normal router tx. Uniswap is **quote-only**; execute via CoW or Kyber.
+- CoW chains include Ethereum, Base, Arbitrum, Polygon, Avalanche, Gnosis, **Sepolia**.
+- Mainnet swaps need gate open. Re-quote after any failure; routes expire.
+- Native sell/buy may use the chain's native representation the adapter expects; if a quote fails on native, try the chain's wrapped native token (WETH) address after `contract-learn` or known WETH for that chain.
 
-Quote (read-only):
+### Bridge (cross-chain EVM → EVM)
 
-`agent-wallet swap-quote <chain> --sell 0xSELL --buy 0xBUY --amount 1000000000000000000 --from 0xYOU`
+```sh
+agent-wallet bridge-quote --from-chain ethereum --to-chain arbitrum --from-token 0xFROM --to-token 0xTO --amount 100000000 --address 0xYOU
+agent-wallet bridge --from-chain ethereum --to-chain arbitrum --from-token 0xFROM --to-token 0xTO --amount 100000000 --wallet main --wait
+agent-wallet bridge-status 0xSOURCE_TX --from-chain ethereum --to-chain arbitrum
+```
 
-Returns the best `buyAmount` across supported adapters, plus `minBuyAmount` after slippage. Add `--adapter cow|kyber|uniswap` to force one, `--slippage 50` for basis points (default 50 = 0.5%).
+Two-phase: source tx you sign, then async delivery. Track until `DONE` / `FAILED`. Source chain must pass the gate. Re-quote if stale.
 
-Execute:
+### Faucet (testnet self-fund)
 
-`agent-wallet swap <chain> --sell 0xSELL --buy 0xBUY --amount 1000000000000000000 --wallet main --wait`
+```sh
+agent-wallet faucet --network base-sepolia --token eth --wallet main
+agent-wallet faucet --network sepolia --token eth --address 0x...
+```
 
-The sender is derived from the wallet. The layer approves the spender if allowance is short (an `approvalTx`), then:
+Networks: `base-sepolia`, `sepolia`. Tokens: `eth`, `usdc`, `eurc`, `cbbtc` (CDP availability). Needs free CDP API keys. Not a substitute for mainnet funding.
 
-- Kyber: signs and broadcasts a router call (`swapTx`).
-- CoW: signs an EIP-712 order and posts it; solvers execute and pay gas (`orderUid`). Track at explorer.cow.fi.
+### Contracts
 
-Expect:
+```sh
+agent-wallet contract-learn sepolia 0xCONTRACT
+agent-wallet contract-compile --source ./My.sol --name MyToken
+agent-wallet contract-deploy sepolia --source ./My.sol --name MyToken --args "arg1,arg2" --wallet main
+agent-wallet contract-call sepolia 0xC --fn balanceOf --args 0xHOLDER --abi ./abi.json
+agent-wallet contract-write sepolia 0xC --fn transfer --args "0xTO,1000" --abi ./abi.json --wallet main --wait
+```
 
-- Swaps usually run on mainnet, which is DENIED by default. Enable the chain in `~/.agent-wallet/config.json` first (see "Safety model").
-- CoW is preferred where available (gasless, MEV-protected, protocol-enforced limit price). Uniswap is quote-only here; execute via Kyber or CoW.
-- Re-quote if execution fails; routes and fees expire quickly.
+- Learn first on unknowns; check `verified`. Save ABI from learn/deploy for call/write.
+- View/pure → `contract-call`. State-changing → `contract-write`. Payable: `--value <wei>`.
+- Compile is in-process solc (optimizer 200). Deploy is gated and signed locally.
 
-## 5. Bridge
+## Multi-step playbooks
 
-Bridging is two-phase: a source-chain transaction you sign and broadcast, then asynchronous delivery on the destination. EVM-to-EVM in this version.
+### A. First-time testnet session
 
-Quote (read-only):
+1. Resolve CLI → `init`
+2. Ensure passphrase in `.env`
+3. `wallet-create --name main` (user backs up mnemonic)
+4. `wallet-addresses --name main --family evm` → give user the address + network
+5. Fund: `faucet` if CDP set, else ask user to send testnet ETH
+6. `balance sepolia <address>` until non-zero
 
-`agent-wallet bridge-quote --from-chain ethereum --to-chain arbitrum --from-token 0xUSDC_ETH --to-token 0xUSDC_ARB --amount 100000000 --address 0xYOU`
+### B. Pay someone (transfer)
 
-Returns the route, `toAmountMin`, and the source `transactionRequest`. Amounts are base units.
+1. Confirm network + asset (native vs token address)
+2. Resolve your address; `balance` enough for amount + gas
+3. `send <chain> --to ... --amount ... [--token ...] --wallet main --wait`
+4. Report hash / explorer / `tx` if needed
 
-Execute:
+### C. Change token A into token B (same chain)
 
-`agent-wallet bridge --from-chain ethereum --to-chain arbitrum --from-token 0xUSDC_ETH --to-token 0xUSDC_ARB --amount 100000000 --wallet main --wait`
+1. Confirm chain; resolve sell/buy token addresses (user symbol → address if known; otherwise ask for 0x)
+2. Amount to base units (respect token decimals; if unknown, `contract-learn` / `balance --token` metadata or on-chain decimals via call)
+3. `swap-quote` → show expected out and min out
+4. If user confirms and gate allows: `swap ... --wait`
+5. `balance` both tokens after
 
-The source address is derived from the wallet. The layer approves the bridge spender if needed, then signs and broadcasts the source tx and returns `sourceTx`.
+### D. Move value to another chain
 
-Track delivery:
+1. `bridge-quote` with from/to chain and token addresses
+2. Confirm min out and source gas
+3. `bridge ... --wait` → keep `sourceTx`
+4. Poll `bridge-status` until terminal
 
-`agent-wallet bridge-status <sourceTx> --from-chain ethereum --to-chain arbitrum`
+### E. Deploy and poke a contract
 
-`PENDING` until the destination fills, then `DONE` (or `FAILED`).
+1. Write/read Solidity file
+2. `contract-compile` → fix compiler errors from `error.hint`
+3. `contract-deploy` on chosen testnet
+4. Save `address` + `abi`
+5. `contract-call` / `contract-write` as needed
 
-Expect:
+### F. Return funds / sweep
 
-- Mainnet bridges are DENIED by default; enable the source chain in `~/.agent-wallet/config.json` first.
-- Native-token bridges need no approval; ERC-20 bridges insert an `approvalTx`.
-- Set `LIFI_API_KEY` only to raise rate limits; it is not required.
-- Re-quote if execution fails; routes expire. The quote is saved to state for resume.
-
-## 6. Contract deploy
-
-Compile with solc-js in-process, deploy through the wallet (gated, signed locally, broadcast directly), verify keyless on Sourcify.
-
-Compile:
-
-`agent-wallet contract-compile --source ./MyToken.sol --name MyToken`
-
-Returns ABI and bytecode for each deployable contract. Fix any `COMPILE_FAILED` using the compiler message in `error.hint`.
-
-Deploy:
-
-`agent-wallet contract-deploy <chain> --source ./MyToken.sol --name MyToken --args "arg1,arg2" --wallet main --rpc <url>`
-
-Returns the deployed `address` and the `abi` ready to call. Constructor args are comma-separated; large integers are passed as strings.
-
-Verify (optional):
-
-Verification uses `forge` against a Foundry project directory. Sourcify (default) and Blockscout are keyless; Etherscan needs a key. If you only have a source string, deploy first, then verify from a Foundry project that contains the same source.
-
-Expect:
-
-- Deploys to mainnet are DENIED by default; enable the chain in config first. Testnets (Sepolia, Base Sepolia) work immediately.
-- A reverting constructor is caught at gas estimation (`GAS_ESTIMATE_FAILED`) before broadcast.
-- Compilation is deterministic (optimizer runs 200).
-
-## 7. Contract use
-
-Learn what a contract is:
-
-`agent-wallet contract-learn <chain> <address>`
-
-Returns the ABI, verified source, compiler, and proxy target. Keyless-first (Sourcify, then Blockscout); for an unverified contract it guesses an ABI from bytecode (`source: whatsabi`, `verified: false`). Add `--verified-only` to fail instead of guessing. Use this before calling an unknown contract to get its ABI and to check `verified`.
-
-Call (read-only):
-
-`agent-wallet contract-call <chain> <address> --fn balanceOf --args 0xHOLDER --abi ./abi.json`
-
-No transaction, no gas. Returns the decoded result (bigints as strings). `FUNCTION_NOT_FOUND` lists the available functions.
-
-Write (state-changing):
-
-`agent-wallet contract-write <chain> <address> --fn transfer --args "0xTO,1000" --abi ./abi.json --wallet main --wait`
-
-Gated, signed locally, broadcast. View/pure functions are rejected (`NOT_WRITABLE`, use call). `--value <wei>` attaches native value to a payable call.
-
-Expect:
-
-- Get the ABI from `contract-learn` or from a `contract-deploy` result, then pass it to call/write.
-- Writes to mainnet are DENIED by default; enable the chain in config first.
-- A reverting call returns `CALL_REVERTED`; a reverting write is caught at gas estimation before broadcast.
+1. `balance` sender
+2. Leave gas headroom on EVM; or BTC `--amount-raw all` to sweep
+3. `send` to user's address with `--wait`
+4. Give them the tx hash
 
 ## Safety model
 
-The gate is deterministic code that runs before anything is signed or broadcast. It cannot be talked out of a decision; prompt text is not an enforcement mechanism.
+The gate is deterministic code before sign/broadcast. It cannot be talked out of a decision.
 
-Defaults (no config file):
+Defaults (no config):
 
-- Testnets (Sepolia, Base Sepolia, Bitcoin signet): allowed.
-- Every mainnet (Ethereum, Bitcoin, Base, ...): denied.
-- No per-transaction cap.
+- Testnets allowed (Sepolia, Base Sepolia, Bitcoin signet, …)
+- Every mainnet denied
+- No per-tx cap
 
-Config: `~/.agent-wallet/config.json`
+Config: `~/.agent-wallet/config.json` (or `$AGENT_WALLET_HOME/config.json`)
 
 ```json
 {
@@ -246,109 +269,77 @@ Config: `~/.agent-wallet/config.json`
 }
 ```
 
-- `allowMainnet: true` opens every mainnet.
-- `allowedChains: [1, "bitcoin"]` opens only those, leaving `allowMainnet` false.
-- `maxValueWei` / `maxAmountSats` cap the native amount per send/swap/bridge on EVM / Bitcoin. Over-limit operations return `GATE_CAPPED`.
+- `allowMainnet: true` opens all mainnets.
+- `allowedChains: [1, "bitcoin"]` opens only those.
+- Caps: `maxValueWei` / `maxAmountSats` → `GATE_CAPPED` when exceeded.
 
-What is gated: every state-changing operation: `send`, `swap`, `bridge`, `contract-deploy`, `contract-write`, and raw signing. Reads (`balance`, `tx`, `contract-call`, `swap-quote`, `bridge-quote`, `contract-learn`) are never gated.
+Gated: `send`, `swap`, `bridge`, `contract-deploy`, `contract-write`, raw signing.  
+Never gated: `balance`, `tx`, `fees`, `utxos`, `contract-call`, `swap-quote`, `bridge-quote`, `contract-learn`, `chain-resolve`, `chain-check`, `init`, wallet list/create/import/addresses (create/import need passphrase, not gate).
 
-Keys at rest: the mnemonic is stored only in `~/.agent-wallet/keystore/<name>.json`, encrypted with your passphrase (Web3 keystore v3, scrypt). The passphrase is never written to disk or logs. Back up the mnemonic shown at creation; the keystore cannot recover it without the passphrase.
+Keys: mnemonic only in `keystore/<name>.json` as Web3 keystore v3 (scrypt). Passphrase never logged. No recovery without passphrase + backup mnemonic.
 
-## Reference: keys, derivation, and storage
+## Reference: keys and storage
 
-Derivation paths:
+- EVM path: `m/44'/60'/0'/0/i`
+- BTC taproot: `m/86'/coin'/0'/0/i` (coin 0 mainnet, 1 test/signet)
+- BTC native segwit: `m/84'/coin'/0'/0/i`
+- Matches BIP-86 / BIP-84 vectors (standard wallet restore works)
+- Data dir: `$AGENT_WALLET_HOME` default `~/.agent-wallet` (`keystore/`, `state/`, `cache/`, `config.json`)
+- `AGENT_WALLET_SCRYPT_N` only for tests (power of two >= 1024)
 
-- EVM: `m/44'/60'/0'/0/i` (secp256k1), address index `i`.
-- Bitcoin taproot (default): `m/86'/coin'/0'/0/i`, `coin` = 0 mainnet, 1 for signet/testnet.
-- Bitcoin native segwit: `m/84'/coin'/0'/0/i`.
+## Reference: amounts
 
-Derivation matches the official BIP-86 and BIP-84 vectors, so addresses line up with any other standard wallet restored from the same seed.
+| Context | Flag | Unit |
+|---|---|---|
+| send native EVM | `--amount` | ETH |
+| send ERC-20 | `--amount` | token display units |
+| send BTC | `--amount` | BTC |
+| send any | `--amount-raw` | wei / token raw / sats (`all` BTC) |
+| swap / bridge | `--amount` | **base units** of from/sell token |
 
-Keystore format: Web3 Secret Storage v3: scrypt (N=262144 by default) + aes-128-ctr + keccak MAC, holding the BIP-39 entropy. Interoperable with geth and `cast wallet import`. Files are written mode 0600 under `~/.agent-wallet/keystore/`.
-
-Set `AGENT_WALLET_SCRYPT_N` to a smaller power of two (>= 1024) only for tests; production should keep the default.
-
-Passphrase: comes from `AGENT_WALLET_PASSPHRASE` or `--passphrase`. It is NFKC-normalized before key derivation and never written to disk or logs. A wrong passphrase returns `PASSPHRASE_WRONG`; there is no recovery path without it.
-
-Data directory: override the root with `AGENT_WALLET_HOME` (default `~/.agent-wallet`). It holds `keystore/`, `state/` (multi-step operation resume files), `cache/` (chain registry), and `config.json`.
-
-## Reference: sending details
-
-Amount units:
-
-- `--amount` is display units: ETH on EVM, the token's own units for `--token`, BTC on Bitcoin.
-- `--amount-raw` is base units: wei, token smallest unit, or sats. `--amount-raw all` sweeps every confirmed Bitcoin UTXO to the recipient (single output, no change).
-
-EVM:
-
-- Fees are EIP-1559; the layer reads `maxFeePerGas`/`maxPriorityFeePerGas` from the node and adds a 20 percent gas-limit buffer over the estimate.
-- Balance is pre-checked against worst-case `value + gasLimit * maxFeePerGas`; a shortfall returns `INSUFFICIENT_FUNDS` with nothing broadcast.
-- ERC-20 sends encode `transfer(to, amount)` to the token contract; the recipient is the token argument, not the tx `to`.
-
-Bitcoin:
-
-- Only confirmed UTXOs are spent.
-- Coin selection is largest-first; change returns to the sender's own address. Change below the 546-sat dust threshold folds into the fee.
-- Fee rate defaults to the half-hour estimate; override with `--fee-rate <sat/vB>`.
-- Taproot (p2tr) is the default address type; pass `--type p2wpkh` to spend from native segwit.
-
-Confirmation: EVM `--wait` blocks for the receipt (default 120s) and reports `confirmed` or `reverted`. Bitcoin is always asynchronous: the send returns a txid, and you poll `agent-wallet tx <network> <txid>` until `confirmed`.
+Decimals: 18 for ETH/WETH usually; USDC often 6. Wrong decimals → wrong size trade. Verify before swap.
 
 ## Reference: swap adapters
 
-All adapters are keyless. Quote picks the best `buyAmount` unless you name one with `--adapter`.
+- **CoW** (preferred): EIP-712 order; solvers pay gas; limit price enforced; batch ~15s; Sepolia supported.
+- **Kyber**: router calldata tx; instant; many chains.
+- **Uniswap**: QuoterV2 quote only; execute via CoW/Kyber.
+- Slippage `--slippage` in bps (50 = 0.5%). Quote stored under `state/` for resume.
 
-CoW Protocol (preferred):
+## Reference: Solidity
 
-- Intent model: you sign an EIP-712 order (GPv2 settlement `0x9008D19f58AAbD9eD0D60971565AA8510560ab41`); solvers execute and pay settlement gas. Failed or unfilled orders cost nothing.
-- The signed limit price (buyAmount after slippage) is enforced by the settlement contract, which is stronger than calldata `minOut`.
-- One-time approval to the vault relayer `0xC92E8bdf79f0507f65a392b0ab4667716BFE0110`.
-- Chains: Ethereum, Gnosis, Base, Arbitrum, Polygon, Avalanche, and Sepolia (testnet). Settlement is a batch auction (~15s), so execution is not instant.
+- solc-js 0.8.x in-process; optimizer 200 runs
+- `--args "a,b,c"`; large ints as decimal strings
+- Verify: `forge verify-contract` when a Foundry project exists; Sourcify/Blockscout keyless; Etherscan keyed
+- After deploy, use returned ABI immediately
 
-KyberSwap (fallback):
+## Error playbook
 
-- Aggregator API returns router calldata; the swap is a normal signed transaction to the router, gated like any write.
-- Instant execution, 9+ chains. Slippage guard is the router's `minAmountOut`.
-
-Uniswap (quote backstop):
-
-- On-chain QuoterV2 read, needs only an RPC, no API. Single-venue pricing (no aggregation).
-- Quote-only in this version; execute via CoW or Kyber.
-
-Slippage: `--slippage` is basis points (50 = 0.5%). `minBuyAmount = buyAmount * (10000 - bps) / 10000`. The quote is persisted to `~/.agent-wallet/state/` before execution so a failed broadcast is resumable.
-
-## Reference: Solidity deploy details
-
-Compiler:
-
-- solc-js, current 0.8.x, invoked in-process (no Foundry project needed for compile+deploy).
-- Optimizer enabled, 200 runs. Output is ABI, creation bytecode, and deployed bytecode per contract.
-- A source can hold several contracts; `--name` picks one, otherwise the last concrete contract is deployed. Interfaces and abstract contracts are skipped (`NO_DEPLOYABLE_CONTRACT` if none remain).
-
-Constructor arguments:
-
-- CLI: `--args "a,b,c"` (comma-separated).
-- Pass large integers (uint256) as decimal strings. Addresses as `0x..`. Booleans as `true`/`false`.
-- Encoding uses the compiled ABI; a mismatch surfaces as `GAS_ESTIMATE_FAILED` (the constructor reverts) before anything is broadcast.
-
-Verification: `forge verify-contract` drives the verifiers. Provide a Foundry project (`foundry.toml`) whose source matches the deployed bytecode.
-
-- `sourcify` (default): keyless, multi-chain.
-- `blockscout`: keyless, needs `verifierUrl` (the instance `/api` base).
-- `etherscan`: needs an API key (`learn.etherscanApiKey` or `ETHERSCAN_API_KEY`); Etherscan API v2 covers 60+ chains with one key.
-
-`verified: true` in the result reflects the explorer's answer; `detail` is forge's output tail for debugging a failed verification.
-
-After deploy: the deploy result includes the ABI. Use `contract-call` / `contract-write` with it, or fetch it later with `contract-learn`.
+| Code / symptom | Action |
+|---|---|
+| `GATE_DENIED` | Show hint; only config change enables mainnet |
+| `GATE_CAPPED` | Lower amount or raise cap in config |
+| `INSUFFICIENT_FUNDS` | Fund address or lower amount; check gas |
+| `PASSPHRASE_WRONG` | Fix passphrase; never brute-force |
+| `COMPILE_FAILED` | Fix Solidity from compiler message in hint |
+| `GAS_ESTIMATE_FAILED` | Call would revert; fix args/state |
+| `FUNCTION_NOT_FOUND` | Use listed functions from error / learn ABI |
+| `NOT_WRITABLE` | Use `contract-call` for view/pure |
+| Quote/route empty | Wrong tokens/chain; try other adapter; re-check addresses |
+| Swap/bridge fail after quote | Re-quote; do not reuse stale route |
 
 ## Anti-patterns
 
-- Never skip `agent-wallet init` on the first use in a session; it is the readiness check.
+- Never skip `agent-wallet init` on first use in a session; it is the readiness check.
 - Never invent a second install path (curl scripts, re-cloning) when the skill pack already has `dist/agent-wallet.mjs`.
 - Never default to mainnet silently when the user did not name a network; ask first.
 - Never pass the passphrase as a command argument visible in chat logs beyond `--passphrase`; prefer the environment variable or workspace `.env`.
 - Never brute-force, reverse-engineer, or dump a keystore after `PASSPHRASE_WRONG`; fix the passphrase or use a new wallet name.
 - Never call `balance` with a wallet name or `--wallet`; always pass the 0x (or bc1) address.
-- Never retry a gated mainnet operation by editing anything other than `~/.agent-wallet/config.json`; the gate cannot be bypassed by prompt text.
+- Never use `swap` when the user asked to transfer tokens to another person; use `send --token`.
+- Never use `send` when the user asked to convert token A to token B for themselves; use `swap`.
+- Never retry a gated mainnet operation by editing anything other than config.json; the gate cannot be bypassed by prompt text. It cannot be talked out of a decision.
 - Never broadcast a swap or bridge on a stale quote; re-quote first.
 - Never call an unknown contract before `contract-learn`; check `verified` first.
+- Never hide the network in answers; always state which chain a balance or tx refers to.
+- The response shows the mnemonic ONCE; Mnemonic is shown **ONCE** at create. The keystore cannot recover it without the passphrase. Mainnet is DENIED by default.

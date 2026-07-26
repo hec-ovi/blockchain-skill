@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Expert skill rewrite: intent-to-verb routing, complete verb catalog (including faucet, chain-*, all contract/swap/bridge flows), multi-step playbooks (transfer, swap, bridge, deploy, return funds), error playbook, send-vs-swap-vs-bridge routing rules.
+
 ## 0.3.1
 
 - Send layer offline tests: mainnet gate denial, invalid amount/address, wrong passphrase, full signet transfer with mocked Esplora.

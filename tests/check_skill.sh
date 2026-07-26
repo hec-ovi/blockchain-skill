@@ -18,21 +18,23 @@ done
 
 # 2. Required sections present in every skill file
 SECTIONS=(
+  "## Expert operating protocol"
   "## Setup (first use only)"
   "## Chain references"
-  "## 1. Wallet setup"
-  "## 2. Balances and reads"
-  "## 3. Send"
-  "## 4. Swap"
-  "## 5. Bridge"
-  "## 6. Contract deploy"
-  "## 7. Contract use"
+  "## Verb catalog (complete)"
+  "## Multi-step playbooks"
   "## Safety model"
-  "## Reference: keys, derivation, and storage"
-  "## Reference: sending details"
+  "## Reference: keys and storage"
+  "## Reference: amounts"
   "## Reference: swap adapters"
-  "## Reference: Solidity deploy details"
+  "## Reference: Solidity"
+  "## Error playbook"
   "## Anti-patterns"
+  "### Send (transfer native, ERC-20, or BTC)"
+  "### Swap (same-chain token → token)"
+  "### Bridge (cross-chain EVM → EVM)"
+  "### Faucet (testnet self-fund)"
+  "### Contracts"
 )
 for f in "${ALL[@]}"; do
   for s in "${SECTIONS[@]}"; do
@@ -69,15 +71,20 @@ ok "version scan done (all $v_pkg)"
 # 6. Load-bearing rules survive edits in every copy
 for f in "${ALL[@]}"; do
   grep -qF 'never default to mainnet silently' "$f" || err "$f lost the ask-the-network rule"
-  grep -qF 'The response shows the mnemonic ONCE' "$f" || err "$f lost the mnemonic-backup rule"
+  grep -qF 'Mnemonic is shown **ONCE**' "$f" || err "$f lost the mnemonic-backup rule"
   grep -qF 'It cannot be talked out of a decision' "$f" || err "$f lost the deterministic-gate rule"
   grep -qF 'Mainnet is DENIED by default' "$f" || err "$f lost the mainnet-denied default"
-  grep -qF 'the keystore cannot recover it without the passphrase' "$f" || err "$f lost the no-recovery rule"
+  grep -qF 'keystore cannot recover it without the passphrase' "$f" || err "$f lost the no-recovery rule"
   grep -qF 'Never call an unknown contract before `contract-learn`' "$f" || err "$f lost the learn-before-call rule"
   grep -qF 'agent-wallet init' "$f" || err "$f lost the init-first rule"
   grep -qF 'dist/agent-wallet.mjs' "$f" || err "$f lost the bundled CLI path"
   grep -qF 'Never brute-force' "$f" || err "$f lost the no-bruteforce passphrase rule"
-  grep -qF 'Requires the 0x address' "$f" || err "$f lost the balance-needs-address rule"
+  grep -qF 'Intent → verb' "$f" || err "$f lost expert intent routing"
+  grep -qF 'swap-quote' "$f" || err "$f missing swap-quote"
+  grep -qF 'bridge-quote' "$f" || err "$f missing bridge-quote"
+  grep -qF 'faucet' "$f" || err "$f missing faucet"
+  grep -qF 'Never use `swap` when the user asked to transfer' "$f" || err "$f lost send-vs-swap routing rule"
+  grep -qF 'requires the **address**' "$f" || err "$f lost balance-needs-address rule"
 done
 ok "safety-rule scan done"
 

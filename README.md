@@ -21,7 +21,7 @@ Other skill installers: `npx skills add hec-ovi/blockchain-skill`, Claude `/plug
 Requires Node >= 22.18.
 
 ```
-npm i -g agent-wallet-skill@0.3.1
+npm i -g agent-wallet-skill@0.3.2
 agent-wallet init
 agent-wallet help
 ```
