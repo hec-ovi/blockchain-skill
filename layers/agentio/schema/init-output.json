@@ -13,7 +13,6 @@
     "homeOk",
     "passphraseSet",
     "walletCount",
-    "cdpKeySet",
     "capabilities",
     "nextActions",
     "notes"
@@ -27,7 +26,6 @@
     "homeOk": { "type": "boolean" },
     "passphraseSet": { "type": "boolean" },
     "walletCount": { "type": "integer", "minimum": 0 },
-    "cdpKeySet": { "type": "boolean" },
     "capabilities": {
       "type": "array",
       "items": { "type": "string" }

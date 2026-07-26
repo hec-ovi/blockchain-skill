@@ -1,6 +1,6 @@
 {
   "name": "agent-wallet-skill",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Non-custodial agent wallet toolkit: CLI + agent skills. Create wallets, send, receive, swap, wrap, sign, deploy and verify Solidity contracts. EVM and Bitcoin, local keys, no middleman.",
   "type": "module",
   "license": "MIT",
@@ -52,7 +52,6 @@
     "agent-wallet"
   ],
   "dependencies": {
-    "@coinbase/cdp-sdk": "^1.54.0",
     "@scure/bip32": "^2.0.0",
     "@scure/bip39": "^2.0.0",
     "@scure/btc-signer": "^2.0.0",

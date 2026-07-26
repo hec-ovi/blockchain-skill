@@ -1,6 +1,6 @@
 ---
 name: agent-wallet
-description: Operate a non-custodial blockchain wallet on-chain (EVM and Bitcoin), no exchange or MetaMask. Create or import a wallet, balances, send native/ERC-20/BTC, swap tokens, faucet testnets, compile/deploy/call Solidity. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, transfer, swap, trade, Solidity, contract, on-chain, testnet, mainnet, faucet, sepolia.
+description: Operate a non-custodial blockchain wallet on-chain (EVM and Bitcoin), no exchange or MetaMask. Create or import a wallet, balances, send native/ERC-20/BTC, swap tokens, compile/deploy/call Solidity. Trigger on wallet, crypto, ETH, BTC, ERC-20, token, send, transfer, swap, trade, Solidity, contract, on-chain, testnet, mainnet, sepolia.
 ---
 
 # agent-wallet
@@ -34,7 +34,7 @@ Read `data.ready`, `data.nextActions`, `data.notes`. Do not hand-probe the insta
 2. Else create `.env` once with `AGENT_WALLET_PASSPHRASE=<random >=8 chars>` and `AGENT_WALLET_HOME=./.agent-wallet-data` (or keep default home). Never print the passphrase in chat.
 3. On `PASSPHRASE_WRONG`: stop. Do not brute-force, dump keystore JSON, or reverse-engineer the bundle.
 
-Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
+Fund testnets by receiving from an external wallet or public faucet site. This toolkit does not drip gas.
 
 ## When to use which
 
@@ -48,7 +48,6 @@ Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 | Pay someone (native, ERC-20, BTC) | `send` |
 | Same-chain token A → B | `swap-quote` then `swap` (sell WETH not bare ETH; `wrap` first if needed) |
 | ETH ↔ WETH | `wrap` / `unwrap` |
-| Free testnet gas | `faucet` |
 | Unknown contract | `contract-learn` then call/write |
 | Deploy | `contract-compile` then `contract-deploy` |
 | Chain meta / RPC alive | `chain-resolve` / `chain-check` |
@@ -112,10 +111,9 @@ agent-wallet swap <chain> --sell 0xWETH --buy 0xTOKEN --amount <raw> --wallet ma
 
 Quote first with an **exact** raw amount. Do not sell bare native: `wrap` then sell WETH. Prefer CoW where liquid; Uniswap works on Sepolia when pools exist; Kyber on mainnets. Optional `--adapter cow|kyber|uniswap`, `--slippage 50` (bps). Re-quote if stale.
 
-### Faucet / contracts
+### Contracts
 
 ```
-agent-wallet faucet --network base-sepolia|sepolia --token eth --wallet main
 agent-wallet contract-learn <chain> <address>
 agent-wallet contract-compile --source ./X.sol --name X
 agent-wallet contract-deploy <chain> --source ./X.sol --name X --args "a,b" --wallet main
@@ -131,7 +129,7 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 
 - Mainnet is DENIED by default. Testnets (sepolia, base-sepolia, signet) allowed.
 - Config: `~/.agent-wallet/config.json` → `gate.allowMainnet`, `gate.allowedChains`, `gate.maxValueWei` / `maxAmountSats`.
-- Gated: send, swap, contract-deploy, contract-write. Reads and quotes are not.
+- Gated: send, swap, wrap, unwrap, contract-deploy, contract-write. Reads and quotes are not.
 - Keys: `keystore/<name>.json` Web3 v3 scrypt; passphrase never logged.
 
 ## Anti-patterns

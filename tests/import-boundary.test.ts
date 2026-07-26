@@ -28,7 +28,6 @@ const PUBLISHED: Record<string, ReadonlySet<string>> = {
   learn: new Set(["api", "contract"]),
   contracts: new Set(["api", "contract"]),
   swap: new Set(["api", "contract", "port", "wrap"]),
-  faucet: new Set(["api", "contract"]),
   agentio: new Set(["cli", "init"]),
 };
 

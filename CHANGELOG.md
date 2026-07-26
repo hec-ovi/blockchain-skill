@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Removed faucet (CDP) layer and CLI verb. Fund testnets externally.
+
 ## 0.4.0
 
 - Removed cross-chain bridge (LI.FI layer and CLI verbs) from the toolkit and skill.

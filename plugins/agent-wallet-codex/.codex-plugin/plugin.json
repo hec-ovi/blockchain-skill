@@ -1,6 +1,6 @@
 {
   "name": "agent-wallet-codex",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Non-custodial agent wallet toolkit: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain.",
   "author": {
     "name": "Hector Oviedo",

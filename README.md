@@ -21,20 +21,13 @@ Other skill installers: `npx skills add hec-ovi/blockchain-skill`, Claude `/plug
 Requires Node >= 22.18.
 
 ```
-npm i -g agent-wallet-skill@0.3.2
-agent-wallet init
-agent-wallet help
-```
-
-From a git checkout:
-
-```
 npm install
 npm run build
 ./agent-wallet init
+./agent-wallet help
 ```
 
-Fallback host bootstrap (clone + link): `bash bin/init.sh` or
+Fallback host bootstrap: `bash bin/init.sh` or
 `curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash`.
 
 Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it automatically. At minimum set `AGENT_WALLET_PASSPHRASE` (encrypts the keystore).
@@ -43,31 +36,24 @@ Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it autom
 
 1. Resolve CLI (on PATH, or `.noob/skills/agent-wallet/agent-wallet`, or `node …/dist/agent-wallet.mjs`).
 2. `agent-wallet init` once per session (doctor + data dir).
-3. Verbs: `wallet-create`, `wallet-export`, `balance`, `send`, `swap`, `wrap`, `contract-*`, `faucet`, …
+3. Verbs: `wallet-create`, `wallet-export`, `balance`, `send`, `swap`, `wrap`, `contract-*`, …
 
 Each verb is one process: JSON envelope on stdout, then exit. Not a long-running server.
+
+Fund testnets by sending from an external wallet or a public faucet website. This toolkit does not drip gas.
 
 ## Capabilities
 
 | Area | Verbs | Networks |
 |---|---|---|
-| Wallet | wallet-create, wallet-import, wallet-list, wallet-addresses | EVM + Bitcoin |
+| Wallet | wallet-create, wallet-import, wallet-list, wallet-addresses, wallet-export | EVM + Bitcoin |
 | Read | balance, utxos, fees, tx | EVM + Bitcoin |
 | Send | send (native, ERC-20, BTC, sweep) | EVM + Bitcoin |
 | Swap | swap-quote, swap (CoW, Kyber, Uniswap), wrap, unwrap | EVM |
 | Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn | EVM |
-| Funding | faucet (self-serve testnet gas) | Base Sepolia, Ethereum Sepolia |
 | Session | init, version, help | local |
 
-Every default backend is keyless. Optional keys (Etherscan, CDP for faucet) only raise limits or unlock funding.
-
-## Funding (self-serve gas)
-
-```
-agent-wallet faucet --network base-sepolia --token eth
-```
-
-Uses the Coinbase CDP faucet. Free API key: `CDP_API_KEY_ID`, `CDP_API_KEY_SECRET` in `.env` or `~/.agent-wallet/config.json` (portal.cdp.coinbase.com). Base Sepolia and Ethereum Sepolia: eth, usdc, eurc, cbbtc.
+Every default backend is keyless. Optional Etherscan key only raises contract-learn limits.
 
 ## Safety
 
@@ -79,12 +65,10 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
-**Agent-driven runs** on Base Sepolia (wallet, faucet, send, deploy, call) are documented with explorer links in git history; re-verify after major releases with a separate agent and only the skill text as instructions.
-
 ## Architecture
 
 Layers under `layers/` each own `CONTRACT.md`, `schema/`, `src/`, and `tests/`. Cross-layer TypeScript imports are limited to published modules (import-boundary test); the CLI composition root is `agentio`. Outbound agent I/O is one JSON envelope. See `docs/ARCHITECTURE.md` and `docs/INDEX.md`.
 
-Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, faucet, agentio (CLI + init).
+Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, agentio (CLI + init).
 
 Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). Skill installs and the package ship that file so agents need only Node.

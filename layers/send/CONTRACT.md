@@ -37,4 +37,4 @@ None.
 
 ## How to modify this blackbox safely
 
-Fee-bumping/replacement and richer wait strategies are additive verbs. Never reorder gate after sign. Keep the real-testnet e2e green (it self-funds via the faucet layer); it is the proof that a signed tx actually lands.
+Fee-bumping/replacement and richer wait strategies are additive verbs. Never reorder gate after sign.

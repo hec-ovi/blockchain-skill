@@ -30,7 +30,6 @@ export interface InitReport {
   homeOk: boolean;
   passphraseSet: boolean;
   walletCount: number;
-  cdpKeySet: boolean;
   capabilities: string[];
   nextActions: string[];
   notes: string[];
@@ -72,27 +71,22 @@ export function initToolkit(): Promise<Envelope<InitReport>> {
       walletCount = 0;
     }
 
-    const cdpKeySet = Boolean(
-      process.env["CDP_API_KEY_ID"]?.length && process.env["CDP_API_KEY_SECRET"]?.length,
-    );
-
     const capabilities = [
       "wallet-create",
       "wallet-import",
       "wallet-list",
       "wallet-addresses",
+      "wallet-export",
       "balance",
       "send",
       "swap",
       "wrap",
       "unwrap",
-      "wallet-export",
       "contract-compile",
       "contract-deploy",
       "contract-call",
       "contract-write",
       "contract-learn",
-      "faucet",
     ];
 
     const notes: string[] = [];
@@ -108,20 +102,14 @@ export function initToolkit(): Promise<Envelope<InitReport>> {
       nextActions.push("export AGENT_WALLET_PASSPHRASE=<secret>  # then re-run init");
     }
     if (walletCount === 0 && passphraseSet) {
-      nextActions.push('agent-wallet wallet-create --name main  # backup the mnemonic shown once');
+      nextActions.push("agent-wallet wallet-create --name main  # backup the mnemonic shown once");
     } else if (walletCount > 0) {
       nextActions.push("agent-wallet wallet-list");
       nextActions.push("agent-wallet wallet-addresses --name main --family evm");
     }
-    if (!cdpKeySet) {
-      notes.push(
-        "CDP_API_KEY_ID / CDP_API_KEY_SECRET not set. faucet is unavailable until a free key from portal.cdp.coinbase.com is exported.",
-      );
-    } else {
-      nextActions.push("agent-wallet faucet --network base-sepolia --token eth --wallet main");
-    }
     notes.push("Mainnet is denied by default. Testnets work out of the box.");
     notes.push("Every balance, send, or deploy is scoped to ONE network; ask if the user did not name one.");
+    notes.push("Fund testnets by sending from an external faucet or another wallet; this toolkit does not drip gas.");
 
     if (nextActions.length === 0) {
       nextActions.push("agent-wallet help");
@@ -138,7 +126,6 @@ export function initToolkit(): Promise<Envelope<InitReport>> {
       homeOk,
       passphraseSet,
       walletCount,
-      cdpKeySet,
       capabilities,
       nextActions,
       notes,

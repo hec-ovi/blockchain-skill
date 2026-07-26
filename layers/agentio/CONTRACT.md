@@ -27,7 +27,7 @@ None.
 
 ## Dependencies
 
-Composition root: reads the published api of keys, chains, read, sign, gate, send, learn, contracts, swap, faucet. `init` uses core home + keys list only.
+Composition root: reads the published api of keys, chains, read, sign, gate, send, learn, contracts, swap. `init` uses core home + keys list only.
 
 ## Invariants
 

@@ -9,7 +9,7 @@ The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `n
 ## Non-negotiables
 
 - Non-custodial, barehand: keys are generated locally, stored only as a passphrase-encrypted keystore v3 file (mode 0600), and signing happens in-process. Broadcast goes straight to public RPC / Esplora endpoints. No MetaMask, no exchange, no hosted signer.
-- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, CDP for faucet) are optional accelerators, never requirements.
+- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2) are optional accelerators, never requirements.
 - Chain-agnostic: EVM chains resolve from viem/chains + chainid.network via defineChain; Bitcoin ships mainnet/signet/testnet4. New chain families are new adapters, not rewrites.
 - Fail closed: CLI responses and multi-step state are schema-shaped JSON envelopes. A deterministic gate layer authorizes every state-changing operation before signing. Prompt text is never an enforcement mechanism.
 
@@ -41,8 +41,7 @@ Ripple rule for contracts: additive changes bump a minor `contractVersion`; brea
 | 7 | `layers/learn` | Contract intelligence: verified source + ABI via Sourcify -> Blockscout -> Etherscan v2 (keyed, optional) -> WhatsABI for unverified; proxy resolution | read |
 | 8 | `layers/contracts` | Compile (solc-js), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
 | 9 | `layers/swap` | Quote + execute (CoW, Kyber, Uniswap), wrap/unwrap native↔WETH | write |
-| 10 | `layers/faucet` | Self-serve testnet funding via Coinbase CDP (optional keys) | write |
-| 11 | `layers/agentio` | CLI composition (`agent-wallet <verb>`), session `init` doctor, help/version | n/a |
+| 10 | `layers/agentio` | CLI composition (`agent-wallet <verb>`), session `init` doctor, help/version | n/a |
 
 ### Envelope (every CLI response)
 

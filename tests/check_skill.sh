@@ -68,8 +68,8 @@ for f in "${ALL[@]}"; do
   grep -qF 'dist/agent-wallet.mjs' "$f" || err "$f lost the bundled CLI path"
   grep -qF 'Never brute-force' "$f" || err "$f lost the no-bruteforce rule"
   grep -qF 'swap-quote' "$f" || err "$f missing swap-quote"
-  grep -qF 'faucet' "$f" || err "$f missing faucet"
   grep -qi bridge "$f" && err "$f still mentions bridge (removed)"
+  grep -qi faucet "$f" && err "$f still mentions faucet (removed)"
   grep -qF 'Never `swap` when the user asked to transfer' "$f" || err "$f lost send-vs-swap rule"
   # lean size cap: fat skill, not a manual
   lines=$(wc -l < "$f")

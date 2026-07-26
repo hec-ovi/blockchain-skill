@@ -20,6 +20,7 @@ describe("init doctor", () => {
       expect(env.data?.passphraseSet).toBe(false);
       expect(env.data?.version).toBe(toolkitVersion());
       expect(env.data?.capabilities.length).toBeGreaterThan(5);
+      expect(env.data?.capabilities).not.toContain("faucet");
       expect(env.data?.nextActions.some((a) => a.includes("AGENT_WALLET_PASSPHRASE"))).toBe(true);
       expect(env.data?.notes.some((n) => /mainnet/i.test(n))).toBe(true);
     } finally {
