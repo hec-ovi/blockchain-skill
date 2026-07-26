@@ -79,7 +79,7 @@ Agent flow: resolve CLI (PATH or skill-pack launcher / `dist/agent-wallet.mjs`) 
 
 ## Delivery
 
-- TypeScript, Node >= 22.18. Runtime deps: viem, @scure/*, ethereum-cryptography, solc, zod, optional CDP SDK for faucet.
+- TypeScript, Node >= 22.18. Runtime deps: viem, @scure/*, ethereum-cryptography, solc, zod.
 - npm package `agent-wallet-skill`, bin `dist/agent-wallet.mjs`. Versions lockstep across package.json and plugin manifests.
 - Install routes: `/skills add hec-ovi/blockchain-skill` (primary for agents), host `npm run build && ./agent-wallet`, optional `bin/init.sh`, optional npm global when published.
 - Build: `npm run build` writes `dist/agent-wallet.mjs`. The file is committed so skill add works without a local compile. `pretest` rebuilds it.
