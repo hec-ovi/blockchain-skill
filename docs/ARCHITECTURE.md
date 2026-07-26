@@ -80,7 +80,7 @@ Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
 
 - TypeScript, Node >= 22.18. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
 - Packaging mirrors the siblings: root `SKILL.md`, `skills/agent-wallet/`, `plugins/agent-wallet/` (Claude), `plugins/agent-wallet-codex/` (Codex), `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, npm package `agent-wallet` with bin `dist/agent-wallet.mjs`. Versions in lockstep across all manifests, enforced by `tests/check_skill.sh` and the distribution test (which also bans em/en dashes in docs).
-- Install routes: `/skills add hec-ovi/blockchain-skill` (agent skill pack + bundled CLI), `npm i -g agent-wallet`, `npx agent-wallet`, host `bin/init.sh`.
+- Install routes: `/skills add hec-ovi/blockchain-skill` (agent skill pack + bundled CLI), `npm i -g agent-wallet-skill` (when published), host `bin/init.sh`.
 - Build: `npm run build` -> `dist/agent-wallet.mjs`. Committed so skill add works without a local compile. `pretest` rebuilds it.
 
 ## Testing
