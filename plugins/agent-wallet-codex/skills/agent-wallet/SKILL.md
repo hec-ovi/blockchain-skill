@@ -34,7 +34,7 @@ Read `data.ready`, `data.nextActions`, `data.notes`. Do not hand-probe the insta
 2. Else create `.env` once with `AGENT_WALLET_PASSPHRASE=<random >=8 chars>` and `AGENT_WALLET_HOME=./.agent-wallet-data` (or keep default home). Never print the passphrase in chat.
 3. On `PASSPHRASE_WRONG`: stop. Do not brute-force, dump keystore JSON, or reverse-engineer the bundle.
 
-Fund testnets by receiving from an external wallet or public faucet site. This toolkit does not drip gas.
+Fund testnets by receiving from an external wallet or a public testnet drip site. This toolkit does not drip gas.
 
 ## When to use which
 

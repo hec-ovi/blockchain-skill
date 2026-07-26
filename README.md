@@ -40,7 +40,7 @@ Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it autom
 
 Each verb is one process: JSON envelope on stdout, then exit. Not a long-running server.
 
-Fund testnets by sending from an external wallet or a public faucet website. This toolkit does not drip gas.
+Fund testnets by sending from an external wallet or a public testnet drip site. This toolkit does not drip gas.
 
 ## Capabilities
 
