@@ -57,7 +57,18 @@ export const BTC_CHAINS: Record<BtcNetworkName, BtcChainInfo> = {
   },
 };
 
-const ALIASES: Record<string, number> = { eth: 1, ethereum: 1, mainnet: 1 };
+const ALIASES: Record<string, number> = {
+  eth: 1,
+  ethereum: 1,
+  mainnet: 1,
+  // Hyphen / compact forms agents type naturally
+  "base-sepolia": 84532,
+  basesepolia: 84532,
+  "op-sepolia": 11155420,
+  opsepolia: 11155420,
+  "arbitrum-sepolia": 421614,
+  "arb-sepolia": 421614,
+};
 
 /** Keyless-usable http(s) URLs only: drop websockets and ${API_KEY} templates. */
 function usableRpcs(urls: string[]): string[] {
@@ -159,6 +170,11 @@ function indexViem() {
     if (!byId.has(c.id)) byId.set(c.id, c);
     byName.set(key.toLowerCase(), c);
     byName.set(c.name.toLowerCase(), c);
+    // baseSepolia -> base-sepolia; "Base Sepolia" -> base-sepolia / basesepolia
+    const kebab = key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+    byName.set(kebab, c);
+    byName.set(c.name.toLowerCase().replace(/\s+/g, "-"), c);
+    byName.set(c.name.toLowerCase().replace(/\s+/g, ""), c);
   }
   viemIndex = { byId, byName };
   return viemIndex;
@@ -179,7 +195,9 @@ export async function resolveChain(ref: string | number, fetchFn: FetchLike = fe
     const hit = byId.get(numeric);
     if (hit) return fromViem(hit);
   } else {
-    const hit = byName.get(asString);
+    const spaced = asString.replace(/-/g, " ");
+    const compact = asString.replace(/-/g, "");
+    const hit = byName.get(asString) ?? byName.get(spaced) ?? byName.get(compact);
     if (hit) return fromViem(hit);
   }
 

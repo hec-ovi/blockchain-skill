@@ -12,7 +12,6 @@ if [[ -f "$ROOT/bin/entry.ts" ]]; then
   exec node "$ROOT/bin/entry.ts" "$@"
 fi
 
-# Legacy source entry name (older checkouts / docs).
 if [[ -f "$ROOT/bin/agent-wallet.ts" ]]; then
   exec node "$ROOT/bin/agent-wallet.ts" "$@"
 fi

@@ -81,6 +81,7 @@ ok "safety-rule + lean-size scan done"
 [ -x agent-wallet ] || err "root agent-wallet launcher missing or not executable"
 [ -x bin/agent-wallet ] || err "bin/agent-wallet launcher missing or not executable"
 [ -f dist/agent-wallet.mjs ] || err "dist/agent-wallet.mjs missing (run npm run build)"
+[ -f dist/vendor/node_modules/solc/index.js ] || err "dist/vendor solc missing (run npm run build)"
 ok "launcher + bundle present"
 
 if [ "$fail" = 0 ]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; exit 1; fi

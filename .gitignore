@@ -1,9 +1,10 @@
 docs/IDEA.md
 node_modules/
-# Ship the self-contained CLI with the skill pack so /skills add is plug-and-play.
-# Other build artifacts under dist/ stay ignored.
+# Ship the self-contained CLI + vendored solc with the skill pack so /skills add
+# is plug-and-play. Other build artifacts under dist/ stay ignored.
 dist/*
 !dist/agent-wallet.mjs
+!dist/vendor/
 .env
 .env.*
 !.env.example

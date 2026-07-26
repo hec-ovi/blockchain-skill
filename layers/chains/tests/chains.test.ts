@@ -47,6 +47,8 @@ describe("chain resolution (offline)", () => {
     const base = await resolveChain("base sepolia", neverFetch);
     expect(base.family === "evm" && base.chainId).toBe(84532);
     expect(base.testnet).toBe(true);
+    const baseHyphen = await resolveChain("base-sepolia", neverFetch);
+    expect(baseHyphen.family === "evm" && baseHyphen.chainId).toBe(84532);
     expect((await resolveChain("ethereum", neverFetch)).testnet).toBe(false);
   });
 

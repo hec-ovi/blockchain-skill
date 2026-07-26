@@ -1,7 +1,8 @@
 import { createRequire } from "node:module";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { CodedError } from "../../core/src/envelope.ts";
-
-const require = createRequire(import.meta.url);
 
 export interface CompiledContract {
   contractName: string;
@@ -17,18 +18,49 @@ interface SolcError {
   formattedMessage: string;
 }
 
+type SolcApi = { compile(input: string): string; version(): string };
+
+/**
+ * Load solc-js from (in order): dist/vendor (shipped with the bundle), the
+ * package node_modules next to the skill pack, or the ambient require path.
+ * createRequire(import.meta.url) alone fails for the single-file bundle when
+ * no node_modules sits beside dist/agent-wallet.mjs.
+ */
+function loadSolc(): SolcApi {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    join(here, "vendor", "node_modules", "solc"),
+    join(here, "..", "node_modules", "solc"),
+    join(here, "..", "..", "node_modules", "solc"),
+    join(process.cwd(), "node_modules", "solc"),
+  ];
+  for (const solcDir of candidates) {
+    const entry = join(solcDir, "index.js");
+    if (!existsSync(entry)) continue;
+    try {
+      return createRequire(entry)(solcDir) as SolcApi;
+    } catch {
+      /* try next */
+    }
+  }
+  try {
+    return createRequire(import.meta.url)("solc") as SolcApi;
+  } catch {
+    throw new CodedError(
+      "SOLC_MISSING",
+      "the solc compiler is not installed",
+      "Reinstall the skill pack (includes dist/vendor), or run npm install solc in the toolkit tree",
+    );
+  }
+}
+
 /**
  * Compile one Solidity source string with solc-js (in-process, cross-OS).
  * Returns every contract found, or the named one. Warnings are ignored;
  * any error fails closed with the compiler's own message as the hint.
  */
 export function compileSource(source: string, sourceName = "Contract.sol", optimize = true, contractName?: string): CompiledContract[] {
-  let solc: { compile(input: string): string; version(): string };
-  try {
-    solc = require("solc");
-  } catch {
-    throw new CodedError("SOLC_MISSING", "the solc compiler is not installed", "Run npm install solc, or use a Foundry project path");
-  }
+  const solc = loadSolc();
 
   const input = {
     language: "Solidity",

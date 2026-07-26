@@ -7,13 +7,47 @@
  * surface of @coinbase/cdp-sdk, not x402 payments.
  */
 import * as esbuild from "esbuild";
-import { readFileSync, writeFileSync, chmodSync, mkdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  chmodSync,
+  mkdirSync,
+  cpSync,
+  rmSync,
+  existsSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const outfile = join(root, "dist", "agent-wallet.mjs");
+
+/** solc cannot be esbuild-bundled cleanly (dynamic requires). Ship it beside the CLI. */
+function vendorSolc() {
+  const vendorNm = join(root, "dist", "vendor", "node_modules");
+  rmSync(join(root, "dist", "vendor"), { recursive: true, force: true });
+  mkdirSync(vendorNm, { recursive: true });
+  const pkgs = [
+    "solc",
+    "command-exists",
+    "commander",
+    "follow-redirects",
+    "js-sha3",
+    "memorystream",
+    "semver",
+    "tmp",
+    "os-tmpdir",
+  ];
+  for (const name of pkgs) {
+    const src = join(root, "node_modules", name);
+    if (!existsSync(src)) {
+      throw new Error(`build: missing dependency ${name} (npm install first)`);
+    }
+    cpSync(src, join(vendorNm, name), { recursive: true });
+  }
+  console.log(`vendored solc (+deps) -> dist/vendor/node_modules`);
+}
 
 const stubPlugin = {
   name: "stub-optional-x402",
@@ -65,6 +99,8 @@ let body = readFileSync(outfile, "utf8");
 body = body.replace(/^(#!.*\n)+/, "");
 writeFileSync(outfile, `#!/usr/bin/env node\n${body}`);
 chmodSync(outfile, 0o755);
+
+vendorSolc();
 
 const mb = (readFileSync(outfile).byteLength / (1024 * 1024)).toFixed(2);
 console.log(`built dist/agent-wallet.mjs v${pkg.version} (${mb} MiB)`);

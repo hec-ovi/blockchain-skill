@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+
+- Vendor solc beside the CLI so skill-pack installs can compile without a local node_modules.
+- Resolve hyphenated chain names (base-sepolia, etc.).
+
 ## 0.3.3
 
 - Lean fat skill rewrite (websearch-shaped): intent table, full verbs, safety, anti-patterns. Dropped playbook bloat. Enforced <220 lines.
