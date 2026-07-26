@@ -2,7 +2,7 @@
 
 One repo ships two faces over one engine: a self-contained CLI (any OS, any agent that can shell out to Node) and one fat agent skill replicated to every discovery convention (root, `skills/`, Claude and Codex plugin dirs). Both call the same layer code and emit the same envelope, so behavior is identical no matter how an agent reaches it.
 
-Working name: `agent-wallet` (CLI bin, plugin name, npm package). Repo stays `blockchain-skill`.
+Working name: `agent-wallet` (CLI bin, plugin name). npm package name: `agent-wallet-skill`. Repo stays `blockchain-skill`.
 
 The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `npm run build` (esbuild). Skill installers that copy this repo (noob `/skills add`, root `SKILL.md`) include that file, so the agent runs verbs with only Node on PATH. Host installs use the same file via `npm i -g agent-wallet` or `./agent-wallet` after build.
 

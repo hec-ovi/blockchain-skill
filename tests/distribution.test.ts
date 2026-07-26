@@ -88,7 +88,7 @@ describe("distribution: bundled CLI for skill packs", () => {
   it("package bin points at the bundle", () => {
     const pkg = readJson("package.json");
     expect(pkg.bin["agent-wallet"]).toBe("dist/agent-wallet.mjs");
-    expect(pkg.name).toBe("agent-wallet");
+    expect(pkg.name).toBe("agent-wallet-skill");
   });
 });
 
