@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.6
+
+- wrap/unwrap native↔WETH; Uniswap Sepolia quote+execute; LI.FI User-Agent; swap refuses bare native sell with wrap hint.
+
 ## 0.3.5
 
 - `wallet-export`: address + private key (optional mnemonic); prefer `--out` file mode 0600.

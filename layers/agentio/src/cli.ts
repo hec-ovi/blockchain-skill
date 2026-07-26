@@ -4,7 +4,7 @@ import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
-import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
+import { quote as swapQuote, swap as swapExec, unwrap as unwrapExec, wrap as wrapExec } from "../../swap/src/api.ts";
 import { bridge as bridgeExec, quote as bridgeQuote, status as bridgeStatus } from "../../bridge/src/api.ts";
 import { faucet as faucetFund } from "../../faucet/src/api.ts";
 import { initToolkit, toolkitVersion } from "./init.ts";
@@ -299,6 +299,40 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["adapter"] !== undefined && { adapter: flags["adapter"] }),
           ...(flags["slippage"] !== undefined && { slippageBps: Number(flags["slippage"]) }),
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+        }),
+      );
+    },
+  },
+  wrap: {
+    summary: "wrap <chain> --amount <eth> | --amount-raw <wei> [--wallet name] [--wait]  (native → WETH)",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await wrapExec({
+          chain: rest[0] ?? "",
+          wallet: flags["wallet"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          ...(flags["amount"] !== undefined && { amount: flags["amount"] }),
+          ...(flags["amount-raw"] !== undefined && { amountRaw: flags["amount-raw"] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
+    },
+  },
+  unwrap: {
+    summary: "unwrap <chain> --amount <eth> | --amount-raw <wei> [--wallet name] [--wait]  (WETH → native)",
+    run: async (args) => {
+      const { flags, rest } = parseFlags(args);
+      return emit(
+        await unwrapExec({
+          chain: rest[0] ?? "",
+          wallet: flags["wallet"] ?? "main",
+          passphrase: passphraseFrom(flags),
+          ...(flags["amount"] !== undefined && { amount: flags["amount"] }),
+          ...(flags["amount-raw"] !== undefined && { amountRaw: flags["amount-raw"] }),
+          ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
+          ...(flags["wait"] !== undefined && { wait: true }),
         }),
       );
     },

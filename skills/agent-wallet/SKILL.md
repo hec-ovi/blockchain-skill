@@ -46,7 +46,8 @@ Optional: `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` for `faucet` only.
 | Export key / backup secrets | `wallet-export` (prefer `--out`) |
 | Balance / fees / tx / UTXOs | `balance` / `fees` / `tx` / `utxos` |
 | Pay someone (native, ERC-20, BTC) | `send` |
-| Same-chain token A → B | `swap-quote` then `swap` |
+| Same-chain token A → B | `swap-quote` then `swap` (sell WETH not bare ETH; `wrap` first if needed) |
+| ETH ↔ WETH | `wrap` / `unwrap` |
 | Cross-chain | `bridge-quote` then `bridge` then `bridge-status` |
 | Free testnet gas | `faucet` |
 | Unknown contract | `contract-learn` then call/write |
@@ -101,14 +102,16 @@ agent-wallet send signet --to tb1p.. --amount-raw all --wallet main
 
 `--amount` = display units (ETH/token/BTC). `--amount-raw` = wei/token-raw/sats (`all` = BTC sweep). EVM `--wait` waits for receipt; BTC returns txid (poll `tx`).
 
-### Swap (base units of sell token)
+### Swap / wrap (base units for swap sell amount)
 
 ```
-agent-wallet swap-quote <chain> --sell 0xSELL --buy 0xBUY --amount <raw> --from 0xYOU
-agent-wallet swap <chain> --sell 0xSELL --buy 0xBUY --amount <raw> --wallet main --wait
+agent-wallet wrap <chain> --amount 0.0001 --wallet main --wait
+agent-wallet unwrap <chain> --amount 0.0001 --wallet main --wait
+agent-wallet swap-quote <chain> --sell 0xWETH --buy 0xTOKEN --amount <raw> --from 0xYOU
+agent-wallet swap <chain> --sell 0xWETH --buy 0xTOKEN --amount <raw> --wallet main --wait
 ```
 
-Quote first. Prefer CoW when available (incl. Sepolia); Kyber executes router txs; Uniswap is quote-only. Mainnet needs gate open. Re-quote if stale. Optional `--adapter cow|kyber|uniswap`, `--slippage 50` (bps).
+Quote first with an **exact** raw amount. Do not sell bare native: `wrap` then sell WETH. Prefer CoW where liquid; Uniswap works on Sepolia when pools exist; Kyber on mainnets. Optional `--adapter cow|kyber|uniswap`, `--slippage 50` (bps). Re-quote if stale.
 
 ### Bridge (EVM→EVM, base units)
 

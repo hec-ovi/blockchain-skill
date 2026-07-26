@@ -6,7 +6,12 @@ const LIFI_BASE = "https://li.quest/v1";
 /** Optional key raises rate limits; the API is fully usable without one. */
 function headers(): Record<string, string> {
   const key = process.env["LIFI_API_KEY"];
-  return { "content-type": "application/json", ...(key ? { "x-lifi-api-key": key } : {}) };
+  return {
+    "content-type": "application/json",
+    accept: "application/json",
+    "user-agent": "agent-wallet/0.3.5",
+    ...(key ? { "x-lifi-api-key": key } : {}),
+  };
 }
 
 export interface BridgeQuoteParams {
