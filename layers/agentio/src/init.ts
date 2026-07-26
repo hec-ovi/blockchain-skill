@@ -109,7 +109,7 @@ export function initToolkit(): Promise<Envelope<InitReport>> {
     }
     notes.push("Mainnet is denied by default. Testnets work out of the box.");
     notes.push("Every balance, send, or deploy is scoped to ONE network; ask if the user did not name one.");
-    notes.push("Fund testnets by sending from an external faucet or another wallet; this toolkit does not drip gas.");
+    notes.push("Fund testnets by receiving from an external wallet or a public testnet drip site; this toolkit does not drip gas.");
 
     if (nextActions.length === 0) {
       nextActions.push("agent-wallet help");
