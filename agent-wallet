@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Skill-root launcher for agent CLIs that install this repo as a skill pack
+# (e.g. noob: .noob/skills/agent-wallet/agent-wallet). Same behavior as bin/agent-wallet.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec bash "$ROOT/bin/agent-wallet" "$@"

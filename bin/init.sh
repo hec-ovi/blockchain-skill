@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap the agent-wallet toolkit: install or update the CLI, put it on PATH, verify it.
+# Host bootstrap for the agent-wallet CLI (optional; agent skill packs already ship dist/).
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash
 #   bash bin/init.sh            (from an existing clone)
@@ -24,29 +24,30 @@ fi
 
 cd "$DEST"
 npm install --no-audit --no-fund --loglevel=error
+npm run build --loglevel=error
 
 ON_PATH=0
 if [ "${AGENT_WALLET_SKIP_LINK:-0}" != "1" ]; then
   if npm link --loglevel=error >/dev/null 2>&1 && command -v agent-wallet >/dev/null 2>&1; then
     ON_PATH=1
   else
-    echo "note: npm link failed (permissions); the CLI still works via: node $DEST/bin/agent-wallet.ts <verb>"
+    echo "note: npm link failed (permissions); invoke via: $DEST/agent-wallet <verb>"
   fi
 fi
 
 if [ "$ON_PATH" = "1" ]; then
   agent-wallet version >/dev/null
+  agent-wallet init >/dev/null
 else
-  node "$DEST/bin/agent-wallet.ts" version >/dev/null
+  "$DEST/agent-wallet" version >/dev/null
+  "$DEST/agent-wallet" init >/dev/null
 fi
-
-# Read-only sanity check (offline: resolves from static chain data).
-node "$DEST/bin/agent-wallet.ts" chain-resolve ethereum >/dev/null
 
 echo "init ok: agent-wallet toolkit ready at $DEST"
 if [ "$ON_PATH" = "1" ]; then
   echo "invoke as: agent-wallet <verb>"
 else
-  echo "invoke as: node $DEST/bin/agent-wallet.ts <verb>"
+  echo "invoke as: $DEST/agent-wallet <verb>"
+  echo "        or: node $DEST/dist/agent-wallet.mjs <verb>"
 fi
-echo "next: export AGENT_WALLET_PASSPHRASE=<your passphrase>"
+echo "next: export AGENT_WALLET_PASSPHRASE=<your passphrase> && agent-wallet init"

@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const BIN = new URL("../../../bin/agent-wallet.ts", import.meta.url).pathname;
+const BIN = new URL("../../../bin/entry.ts", import.meta.url).pathname;
 
 let home: string;
 let env: NodeJS.ProcessEnv;

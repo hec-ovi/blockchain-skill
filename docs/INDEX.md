@@ -16,7 +16,8 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Swap quotes and execution, aggregator adapters | `layers/swap/` |
 | Cross-chain bridging | `layers/bridge/` |
 | Self-serve testnet funding (CDP faucet) | `layers/faucet/` |
-| CLI verbs, output formatting | `layers/agentio/` |
+| CLI verbs, init doctor, output formatting | `layers/agentio/` |
+| Bundled CLI build (esbuild) | `scripts/build.mjs` -> `dist/agent-wallet.mjs` |
 | Agent-facing skill (fat SKILL.md and its copies) | `SKILL.md` (canonical), `skills/`, `plugins/` |
 | Packaging, manifests, install routes | repo root + `.claude-plugin/` + `.agents/` + `plugins/` |
 

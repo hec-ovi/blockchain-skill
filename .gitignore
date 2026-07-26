@@ -1,6 +1,9 @@
 docs/IDEA.md
 node_modules/
-dist/
+# Ship the self-contained CLI with the skill pack so /skills add is plug-and-play.
+# Other build artifacts under dist/ stay ignored.
+dist/*
+!dist/agent-wallet.mjs
 .env
 .env.*
 !.env.example

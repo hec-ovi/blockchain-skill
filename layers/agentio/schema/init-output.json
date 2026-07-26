@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/agentio/schema/init-output.json",
+  "title": "InitReport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ready",
+    "version",
+    "node",
+    "nodeOk",
+    "home",
+    "homeOk",
+    "passphraseSet",
+    "walletCount",
+    "cdpKeySet",
+    "capabilities",
+    "nextActions",
+    "notes"
+  ],
+  "properties": {
+    "ready": { "type": "boolean" },
+    "version": { "type": "string", "minLength": 1 },
+    "node": { "type": "string" },
+    "nodeOk": { "type": "boolean" },
+    "home": { "type": "string", "minLength": 1 },
+    "homeOk": { "type": "boolean" },
+    "passphraseSet": { "type": "boolean" },
+    "walletCount": { "type": "integer", "minimum": 0 },
+    "cdpKeySet": { "type": "boolean" },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "nextActions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -2,19 +2,50 @@
 
 Toolkit that lets any AI agent operate a wallet directly on-chain: create wallets, receive, send, swap, bridge, sign, deploy and verify Solidity contracts, and learn how deployed contracts work. Keys are generated and stored on your own machine (encrypted keystore v3), and transactions go straight to public RPC endpoints. No MetaMask, no exchange, no custodial anything.
 
-Ships two faces over one engine: a CLI (`agent-wallet <verb>`) and one fat agent skill replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs), so any agent CLI finds it. Same verbs, same JSON envelope everywhere.
+Two faces over one engine: a self-contained CLI (`agent-wallet <verb>`) and one fat agent skill replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs). Same verbs, same JSON envelope everywhere.
 
 ## Install
 
-- CLI: `curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash` (installs or updates the toolkit to `~/.local/share/agent-wallet`, links `agent-wallet` onto PATH, verifies), then `agent-wallet help`
-- Skill (any CLI): `/skills add hec-ovi/blockchain-skill` or `npx skills add hec-ovi/blockchain-skill`
-- Plugin (Claude Code): `/plugin marketplace add hec-ovi/blockchain-skill`
+### Agent CLI (plug and play)
 
-Requires Node >= 22.18 (runs the TypeScript directly). Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it automatically. At minimum set `AGENT_WALLET_PASSPHRASE` (encrypts the keystore).
+```
+/skills add hec-ovi/blockchain-skill
+```
 
-## MCP discontinued
+That copies the skill pack (including the bundled CLI at `dist/agent-wallet.mjs`) into the workspace. The agent then resolves the CLI, runs `agent-wallet init` once, and uses the verbs. No second bootstrap script.
 
-The MCP server face was discontinued in v0.2.0: `.mcp.json`, the `agent-wallet mcp` command, and the `@modelcontextprotocol/sdk` dependency were removed. The CLI and the skills expose the same verbs with the same JSON envelope, so nothing is lost; drive the CLI from any agent instead.
+Other skill installers: `npx skills add hec-ovi/blockchain-skill`, Claude `/plugin marketplace add hec-ovi/blockchain-skill`.
+
+### Host CLI (optional)
+
+Requires Node >= 22.18.
+
+```
+npm i -g agent-wallet@0.3.0
+agent-wallet init
+agent-wallet help
+```
+
+From a git checkout:
+
+```
+npm install
+npm run build
+./agent-wallet init
+```
+
+Fallback host bootstrap (clone + link): `bash bin/init.sh` or
+`curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash`.
+
+Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it automatically. At minimum set `AGENT_WALLET_PASSPHRASE` (encrypts the keystore).
+
+## How agents use it
+
+1. Resolve CLI (on PATH, or `.noob/skills/agent-wallet/agent-wallet`, or `node …/dist/agent-wallet.mjs`).
+2. `agent-wallet init` once per session (doctor + data dir).
+3. Verbs: `wallet-create`, `balance`, `send`, `swap`, `bridge`, `contract-*`, `faucet`, …
+
+Each verb is one process: JSON envelope on stdout, then exit. Not a long-running server.
 
 ## Capabilities
 
@@ -27,18 +58,17 @@ The MCP server face was discontinued in v0.2.0: `.mcp.json`, the `agent-wallet m
 | Bridge | bridge-quote, bridge, bridge-status (LI.FI) | EVM to EVM |
 | Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn | EVM |
 | Funding | faucet (self-serve testnet gas) | Base Sepolia, Ethereum Sepolia |
+| Session | init, version, help | local |
 
-Every default backend is keyless. Optional keys (Etherscan, LI.FI) only raise limits.
+Every default backend is keyless. Optional keys (Etherscan, LI.FI, CDP for faucet) only raise limits or unlock funding.
 
 ## Funding (self-serve gas)
-
-An agent can load its own testnet gas headlessly, no captcha or browser, with the `faucet` verb:
 
 ```
 agent-wallet faucet --network base-sepolia --token eth
 ```
 
-It uses the Coinbase CDP faucet and needs a free API key (`CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`) in `.env` or `~/.agent-wallet/config.json`. Get one at portal.cdp.coinbase.com. Base Sepolia and Ethereum Sepolia are supported, with eth, usdc, eurc, and cbbtc. Bitcoin test faucets still require a human, so use an EVM testnet for automated funding.
+Uses the Coinbase CDP faucet. Free API key: `CDP_API_KEY_ID`, `CDP_API_KEY_SECRET` in `.env` or `~/.agent-wallet/config.json` (portal.cdp.coinbase.com). Base Sepolia and Ethereum Sepolia: eth, usdc, eurc, cbbtc.
 
 ## Safety
 
@@ -46,25 +76,16 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 ## What we verified
 
-The toolkit was checked at three levels: an automated suite, live calls against real public networks, and a full run driven by a separate AI agent acting as a first-time user.
+**Automated suite.** `npm test` builds the bundle, then runs contract tests for every layer, BIP-86/BIP-84 vectors, coin selection, envelope validation, real CLI e2e (source + bundle), and `tests/check_skill.sh` (skill copies byte-identical, versions lockstep, launcher + `dist/agent-wallet.mjs` present).
 
-**Automated suite.** `npm test` runs 90 tests with no external network: schema and contract tests for every layer, key derivation checked against the official BIP-86 and BIP-84 vectors, Bitcoin coin selection, envelope validation, end-to-end runs of the real CLI, and `tests/check_skill.sh`, which keeps the four skill copies byte-identical and the manifest versions in lockstep.
+**Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber / LI.FI quotes.
 
-**Live public-network checks** (opt in with `RUN_LIVE=1`): balance and tip reads on Ethereum Sepolia and Bitcoin signet, a keyless Sourcify ABI fetch for WETH, and live swap and bridge quotes from CoW, KyberSwap, and LI.FI.
-
-**Agent-driven, end to end.** A separate model (Claude Haiku), given only the skill and the CLI, was asked in plain language to create a wallet, hand over an address, check a balance, and send funds. Every command it produced was well-formed and correct, the send landed on-chain, and the safety gate refused a mainnet send with a clear reason. One ambiguity showed up (it assumed a network when none was named), so the skill now tells the agent to ask first.
-
-**On Base Sepolia (real, clickable).** In one run the agent funded a fresh wallet, sent a transfer, deployed the `Counter` contract, and called `increment()` (count went from 41 to 42, confirmed by a raw call straight to the chain). It funded itself through the CDP faucet first, with no human faucet visit:
-
-- Wallet: https://sepolia.basescan.org/address/0xE5f6d3E30259EC65CB373de402647DA3D6Bd7E84
-- Faucet funding: https://sepolia.basescan.org/tx/0x34adadc142150cbd51bf5c8f44766c5fcd0cc7ae4aeb53ec52247a6af25f6ff5
-- Transfer: https://sepolia.basescan.org/tx/0x1e1a51bea96eb6e8b727a0dfcc4a978b2b6ad236ac199f2224d4b48992ad7f97
-- Contract: https://sepolia.basescan.org/address/0xbeaf85138e51c30fe3511f78e7bf868356ec7373
-- Deploy tx: https://sepolia.basescan.org/tx/0x924108df1061ddd917e0785127512a67027d69f3af326c5952488bcce54d5d10
-- increment(): https://sepolia.basescan.org/tx/0xd5e42c9da194487ba261cb6c481cda6a19b7a18c42105a87007c7496ba7236ec
+**Agent-driven runs** on Base Sepolia (wallet, faucet, send, deploy, call) are documented with explorer links in git history; re-verify after major releases with a separate agent and only the skill text as instructions.
 
 ## Architecture
 
-Contract-isolated layers under `layers/`, coupled only through one JSON envelope. Each layer owns its `CONTRACT.md`, `schema/`, `src/`, and `tests/`. `docs/INDEX.md` maps what you want to change to the one folder to open. See `docs/ARCHITECTURE.md` and `docs/RESEARCH.md` for the design and the 2026 stack choices.
+Contract-isolated layers under `layers/`, coupled only through one JSON envelope. Each layer owns its `CONTRACT.md`, `schema/`, `src/`, and `tests/`. `docs/INDEX.md` maps what you want to change to the one folder to open. See `docs/ARCHITECTURE.md` and `docs/RESEARCH.md`.
 
-Layer order, easy to hard: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (the CLI surface).
+Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (CLI + init).
+
+Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). That file is what skill installs and `npm pack` ship so agents need only Node, not a source tree install.

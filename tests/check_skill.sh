@@ -71,10 +71,18 @@ for f in "${ALL[@]}"; do
   grep -qF 'never default to mainnet silently' "$f" || err "$f lost the ask-the-network rule"
   grep -qF 'The response shows the mnemonic ONCE' "$f" || err "$f lost the mnemonic-backup rule"
   grep -qF 'It cannot be talked out of a decision' "$f" || err "$f lost the deterministic-gate rule"
-  grep -qF 'Mainnet is denied by default' "$f" || err "$f lost the mainnet-denied default"
+  grep -qF 'Mainnet is DENIED by default' "$f" || err "$f lost the mainnet-denied default"
   grep -qF 'the keystore cannot recover it without the passphrase' "$f" || err "$f lost the no-recovery rule"
   grep -qF 'Never call an unknown contract before `contract-learn`' "$f" || err "$f lost the learn-before-call rule"
+  grep -qF 'agent-wallet init' "$f" || err "$f lost the init-first rule"
+  grep -qF 'dist/agent-wallet.mjs' "$f" || err "$f lost the bundled CLI path"
 done
 ok "safety-rule scan done"
+
+# 7. Skill pack ships the runnable launcher + bundle
+[ -x agent-wallet ] || err "root agent-wallet launcher missing or not executable"
+[ -x bin/agent-wallet ] || err "bin/agent-wallet launcher missing or not executable"
+[ -f dist/agent-wallet.mjs ] || err "dist/agent-wallet.mjs missing (run npm run build)"
+ok "launcher + bundle present"
 
 if [ "$fail" = 0 ]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; exit 1; fi

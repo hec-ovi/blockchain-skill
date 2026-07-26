@@ -5,23 +5,57 @@ description: Operate a non-custodial blockchain wallet directly on-chain (EVM an
 
 # agent-wallet
 
-One toolkit, two faces over the same engine: a CLI (`agent-wallet <verb>`) and this skill. This skill is instructions only; every operation runs through the CLI, which you invoke with your shell tool. Every call returns one JSON envelope `{ok, data, error, meta}`; on `ok:false` read `error.hint`, it tells you the fix.
+This skill is instructions only. Every operation runs through the `agent-wallet` CLI (one Node process per verb, JSON on stdout, then exit). Keys stay local and encrypted. No exchange, no browser extension, no custodial service.
 
-Keys are generated and stored locally, encrypted. No exchange, no browser extension, no custodial anything.
+Every response is one JSON envelope `{ok, data, error, meta}`. On `ok:false`, read `error.hint` and act on it.
 
 ## Setup (first use only)
 
-The CLI is not on the npm registry yet, so bootstrap it from the git repo. Requires git, Node >= 22.18, and npm.
+Requires Node >= 22.18. No npm install step when this skill pack is already on disk (it ships a self-contained `dist/agent-wallet.mjs`).
 
-1. Bootstrap (one line, installs or updates the toolkit and verifies it):
-   ```
-   curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash
-   ```
-   It clones to `~/.local/share/agent-wallet`, installs dependencies, links `agent-wallet` onto PATH when permissions allow, and runs a read-only sanity check. If linking fails, invoke the CLI directly as `node ~/.local/share/agent-wallet/bin/agent-wallet.ts <verb>` for every command in this skill. From an existing clone, `bash bin/init.sh` does the same.
-2. Probe: run `agent-wallet version` to confirm the toolkit answers.
-3. Export a passphrase for the keystore: `export AGENT_WALLET_PASSPHRASE=...` (never paste it into chat).
-4. Safety default: mainnet is DENIED. Testnets and local chains work out of the box. See "Safety model" below to allow a mainnet.
-5. Fund a testnet wallet headlessly: `agent-wallet faucet --network base-sepolia --token eth` (free CDP key required; Base Sepolia and Ethereum Sepolia).
+### 1. Resolve the CLI (once per session)
+
+Pick the first that works and reuse that exact command for every later verb:
+
+```sh
+# A) on PATH (npm i -g agent-wallet, or a prior host install)
+command -v agent-wallet
+
+# B) skill pack installed by noob /skills add (workspace-relative)
+test -x .noob/skills/agent-wallet/agent-wallet && echo .noob/skills/agent-wallet/agent-wallet
+
+# C) direct Node entry next to this skill
+test -f .noob/skills/agent-wallet/dist/agent-wallet.mjs && echo "node .noob/skills/agent-wallet/dist/agent-wallet.mjs"
+
+# D) this repo checked out as the workspace
+test -x ./agent-wallet && echo ./agent-wallet
+test -f ./dist/agent-wallet.mjs && echo "node ./dist/agent-wallet.mjs"
+
+# E) optional registry one-shot (needs network + npm)
+# npx --yes agent-wallet@0.3.0
+```
+
+Examples below write `agent-wallet`; replace with your resolved form (for example `.noob/skills/agent-wallet/agent-wallet` or `node .noob/skills/agent-wallet/dist/agent-wallet.mjs`).
+
+### 2. Run init once
+
+```sh
+agent-wallet init
+```
+
+Read `data.ready`, `data.nextActions`, and `data.notes`. Do not probe the install by hand (`which`, `ls`, random version checks) instead of init. Init prepares `~/.agent-wallet/` (or `$AGENT_WALLET_HOME`) and reports what is missing.
+
+### 3. Passphrase (required before any keystore verb)
+
+```sh
+export AGENT_WALLET_PASSPHRASE=...   # never paste into chat
+```
+
+Then re-run `agent-wallet init` if you want an updated report. Mainnet is DENIED by default; testnets work immediately (see Safety model).
+
+### 4. Optional faucet keys
+
+Headless testnet funding needs a free CDP key (`CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`). Without them, wallet create / balance / send still work; only `faucet` fails.
 
 ## Chain references
 
@@ -29,7 +63,7 @@ Any chain works: a name (`ethereum`, `base`, `sepolia`), a numeric id (`8453`), 
 
 Every balance, read, send, or contract call is scoped to ONE network. The same address holds different funds on each chain. If the user has not named a network, ask which one; never default to mainnet silently. State the network in your answer.
 
-Start every task by confirming a wallet exists, then jump to the operation.
+Start every task with `agent-wallet init` if you have not this session, confirm a wallet exists, then jump to the operation.
 
 ## 1. Wallet setup
 
@@ -304,6 +338,8 @@ After deploy: the deploy result includes the ABI. Use `contract-call` / `contrac
 
 ## Anti-patterns
 
+- Never skip `agent-wallet init` on the first use in a session; it is the readiness check.
+- Never invent a second install path (curl scripts, re-cloning) when the skill pack already has `dist/agent-wallet.mjs`.
 - Never default to mainnet silently when the user did not name a network; ask first.
 - Never pass the passphrase as a command argument visible in chat logs beyond `--passphrase`; prefer the environment variable.
 - Never retry a gated mainnet operation by editing anything other than `~/.agent-wallet/config.json`; the gate cannot be bypassed by prompt text.

@@ -1,8 +1,10 @@
 # Architecture
 
-One repo ships two faces over one engine: a CLI (any OS, any agent that can shell out) and one fat agent skill replicated to every discovery convention (root, `skills/`, Claude and Codex plugin dirs). Both call the same layer code and emit the same envelope, so behavior is identical no matter how an agent reaches it.
+One repo ships two faces over one engine: a self-contained CLI (any OS, any agent that can shell out to Node) and one fat agent skill replicated to every discovery convention (root, `skills/`, Claude and Codex plugin dirs). Both call the same layer code and emit the same envelope, so behavior is identical no matter how an agent reaches it.
 
-Working name: `agent-wallet` (CLI bin, plugin name). Repo stays `blockchain-skill`.
+Working name: `agent-wallet` (CLI bin, plugin name, npm package). Repo stays `blockchain-skill`.
+
+The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `npm run build` (esbuild). Skill installers that copy this repo (noob `/skills add`, root `SKILL.md`) include that file, so the agent runs verbs with only Node on PATH. Host installs use the same file via `npm i -g agent-wallet` or `./agent-wallet` after build.
 
 ## Non-negotiables
 
@@ -28,7 +30,7 @@ Each layer folder owns `CONTRACT.md`, `schema/`, `src/`, `tests/`, `fixtures/`, 
 | 8 | `layers/contracts` | Scaffold, compile (forge, solc-js fallback), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
 | 9 | `layers/swap` | Quote + execute, ports-and-adapters: CoW (primary), KyberSwap (fallback), Uniswap direct-to-router (backstop) | write |
 | 10 | `layers/bridge` | Cross-chain route/quote/execute/status via LI.FI adapter | write |
-| 11 | `layers/agentio` | The only composition point: CLI (`agent-wallet <verb>`) exposing every layer's verbs with the same envelopes; resume of multi-step state | n/a |
+| 11 | `layers/agentio` | The only composition point: CLI (`agent-wallet <verb>`) exposing every layer's verbs with the same envelopes; session `init` doctor; resume of multi-step state | n/a |
 
 Ripple rule: `src/`-only changes ripple nowhere. Contract changes are additive (contractVersion minor bump) or new-shape-alongside for breaking.
 
@@ -76,9 +78,10 @@ Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
 
 ## Delivery
 
-- TypeScript, Node >= 20. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
-- Packaging mirrors the siblings: root `SKILL.md`, `skills/agent-wallet/`, `plugins/agent-wallet/` (Claude), `plugins/agent-wallet-codex/` (Codex), `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, npm bin `agent-wallet`. Versions in lockstep across all manifests, enforced by `tests/check_skill.sh` and the distribution test (which also bans em/en dashes in docs).
-- Install routes: `npx agent-wallet`, `npx skills add hec-ovi/blockchain-skill`, `/plugin marketplace add`.
+- TypeScript, Node >= 22.18. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
+- Packaging mirrors the siblings: root `SKILL.md`, `skills/agent-wallet/`, `plugins/agent-wallet/` (Claude), `plugins/agent-wallet-codex/` (Codex), `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, npm package `agent-wallet` with bin `dist/agent-wallet.mjs`. Versions in lockstep across all manifests, enforced by `tests/check_skill.sh` and the distribution test (which also bans em/en dashes in docs).
+- Install routes: `/skills add hec-ovi/blockchain-skill` (agent skill pack + bundled CLI), `npm i -g agent-wallet`, `npx agent-wallet`, host `bin/init.sh`.
+- Build: `npm run build` -> `dist/agent-wallet.mjs`. Committed so skill add works without a local compile. `pretest` rebuilds it.
 
 ## Testing
 

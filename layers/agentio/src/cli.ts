@@ -1,4 +1,3 @@
-import { createRequire } from "node:module";
 import { createWallet, getAddresses, importWallet, listWallets } from "../../keys/src/wallet.ts";
 import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
@@ -8,15 +7,10 @@ import { call as contractCall, compile as contractCompile, deploy as contractDep
 import { quote as swapQuote, swap as swapExec } from "../../swap/src/api.ts";
 import { bridge as bridgeExec, quote as bridgeQuote, status as bridgeStatus } from "../../bridge/src/api.ts";
 import { faucet as faucetFund } from "../../faucet/src/api.ts";
+import { initToolkit, toolkitVersion } from "./init.ts";
 import { readFileSync } from "node:fs";
 
 type Handler = (args: string[]) => Promise<number>;
-
-const require = createRequire(import.meta.url);
-
-function pkgVersion(): string {
-  return require("../../../package.json").version as string;
-}
 
 /** --key value and --flag pairs to an object; bare args collect in _ . */
 export function parseFlags(args: string[]): { flags: Record<string, string>; rest: string[] } {
@@ -67,9 +61,13 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
   version: {
     summary: "Print toolkit version",
     run: async () => {
-      console.log(pkgVersion());
+      console.log(toolkitVersion());
       return 0;
     },
+  },
+  init: {
+    summary: "Session doctor: prepare data dir, report readiness, next actions (run once before other verbs)",
+    run: async () => emit(await initToolkit()),
   },
   "wallet-create": {
     summary: "Create a wallet (new BIP-39 mnemonic, encrypted keystore)",

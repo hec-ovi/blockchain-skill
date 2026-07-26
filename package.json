@@ -1,6 +1,6 @@
 {
-  "name": "agent-wallet-skill",
-  "version": "0.2.0",
+  "name": "agent-wallet",
+  "version": "0.3.0",
   "description": "Non-custodial agent wallet toolkit: CLI + agent skills. Create wallets, send, receive, swap, bridge, sign, deploy and verify Solidity contracts. EVM and Bitcoin, local keys, no middleman.",
   "type": "module",
   "license": "MIT",
@@ -14,15 +14,27 @@
     "node": ">=22.18"
   },
   "bin": {
-    "agent-wallet": "bin/agent-wallet.ts",
-    "agent-wallet-skill": "bin/agent-wallet.ts"
+    "agent-wallet": "dist/agent-wallet.mjs",
+    "agent-wallet-skill": "dist/agent-wallet.mjs"
   },
+  "files": [
+    "dist/agent-wallet.mjs",
+    "bin/agent-wallet",
+    "agent-wallet",
+    "SKILL.md",
+    "skills/",
+    "README.md",
+    ".env.example"
+  ],
   "scripts": {
+    "build": "node scripts/build.mjs",
+    "pretest": "node scripts/build.mjs",
     "test": "vitest run && bash tests/check_skill.sh",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check:skills": "bash tests/check_skill.sh",
-    "schemas": "node scripts/export-schemas.ts"
+    "schemas": "node scripts/export-schemas.ts",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "claude-skill",
@@ -33,7 +45,8 @@
     "bitcoin",
     "evm",
     "solidity",
-    "ai-agents"
+    "ai-agents",
+    "agent-wallet"
   ],
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.54.0",
@@ -48,7 +61,11 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "esbuild": "^0.28.1",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
   }
 }

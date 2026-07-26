@@ -78,6 +78,20 @@ describe("distribution: every layer contract is valid", () => {
   });
 });
 
+describe("distribution: bundled CLI for skill packs", () => {
+  it("ships dist/agent-wallet.mjs and skill-root launcher", () => {
+    expect(existsSync(join(root, "dist/agent-wallet.mjs"))).toBe(true);
+    expect(existsSync(join(root, "agent-wallet"))).toBe(true);
+    expect(existsSync(join(root, "bin/agent-wallet"))).toBe(true);
+  });
+
+  it("package bin points at the bundle", () => {
+    const pkg = readJson("package.json");
+    expect(pkg.bin["agent-wallet"]).toBe("dist/agent-wallet.mjs");
+    expect(pkg.name).toBe("agent-wallet");
+  });
+});
+
 describe("distribution: no em or en dashes in docs and manifests", () => {
   const targets = [
     "README.md",

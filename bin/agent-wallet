@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# PATH launcher. Resolves the bundled CLI next to this package, or falls back
+# to the TypeScript entry under a source checkout (Node >= 22.18).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ -f "$ROOT/dist/agent-wallet.mjs" ]]; then
+  exec node "$ROOT/dist/agent-wallet.mjs" "$@"
+fi
+
+if [[ -f "$ROOT/bin/entry.ts" ]]; then
+  exec node "$ROOT/bin/entry.ts" "$@"
+fi
+
+# Legacy source entry name (older checkouts / docs).
+if [[ -f "$ROOT/bin/agent-wallet.ts" ]]; then
+  exec node "$ROOT/bin/agent-wallet.ts" "$@"
+fi
+
+echo "agent-wallet: dist/agent-wallet.mjs not found. From a source checkout run: npm run build" >&2
+exit 127
