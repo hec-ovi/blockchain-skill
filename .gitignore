@@ -1,7 +1,14 @@
 docs/IDEA.md
 node_modules/
-# Ship the self-contained CLI + vendored solc with the skill pack so /skills add
-# is plug-and-play. Other build artifacts under dist/ stay ignored.
+# Exception: vendored solc lives under dist/vendor/node_modules (required for
+# skill-pack installs without a full npm tree). Gitignore otherwise matches any
+# path segment named node_modules.
+!dist/vendor/
+!dist/vendor/**/
+!dist/vendor/**/**
+!dist/vendor/node_modules/
+!dist/vendor/node_modules/**
+# Ship the self-contained CLI + vendored solc. Other dist/ artifacts ignored.
 dist/*
 !dist/agent-wallet.mjs
 !dist/vendor/
