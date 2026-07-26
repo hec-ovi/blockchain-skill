@@ -1,8 +1,0 @@
-{
-  "name": "agent-wallet",
-  "version": "0.1.0",
-  "description": "Non-custodial agent wallet: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain.",
-  "author": "Hector Oviedo",
-  "homepage": "https://github.com/hec-ovi/blockchain-skill",
-  "keywords": ["blockchain", "wallet", "non-custodial", "ethereum", "bitcoin", "evm", "solidity", "swap", "bridge", "mcp"]
-}

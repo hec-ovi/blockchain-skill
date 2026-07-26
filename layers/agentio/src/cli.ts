@@ -71,14 +71,6 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
       return 0;
     },
   },
-  mcp: {
-    summary: "Start the MCP server over stdio (for Claude Code and other MCP clients)",
-    run: async () => {
-      const { runMcp } = await import("./mcp.ts");
-      await runMcp();
-      return new Promise<number>(() => {}); // runs until the transport closes
-    },
-  },
   "wallet-create": {
     summary: "Create a wallet (new BIP-39 mnemonic, encrypted keystore)",
     run: async (args) => {

@@ -18,7 +18,7 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 | Contract verification | forge verify-contract: sourcify (default) and blockscout keyless, etherscan keyed | yes |
 | Contract intelligence | Sourcify APIv2, Blockscout, Etherscan v2 (keyed), WhatsABI for unverified | mostly |
 | E2E testing | real public testnets (Base Sepolia, Sepolia, signet), gas self-funded via the CDP faucet | yes |
-| MCP server | @modelcontextprotocol/sdk 1.29.0, stdio, zod schemas | yes |
+| MCP server | @modelcontextprotocol/sdk 1.29.0, stdio, zod schemas (removed in v0.2.0; CLI + skills only) | yes |
 
 ## 1. Keys and signing
 
@@ -74,6 +74,8 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 
 ## 8. MCP and prior art
 
+Update 2026-07-26: the MCP face was discontinued in v0.2.0 (the CLI and the skills remained the supported surfaces). The notes below are kept as the point-in-time record.
+
 - @modelcontextprotocol/sdk 1.29.0 (2026-03-30), Node >=18, zod v3/v4. v2 beta (@modelcontextprotocol/server 2.0.0-beta.5) targets stable 2026-07-28; v1 keeps fixes for 6+ months. stdio remains the standard transport for local Claude Code servers. Decision: build on 1.29.0, revisit v2 after it settles.
 - Nobody ships the full combo (local keys + swap + bridge + Solidity deploy across EVM and Bitcoin as MCP + CLI + skill). Closest: strangelove-ventures/web3-mcp (multi-chain incl. Bitcoin UTXO + THORChain swaps, abandoned 2025-03), mcpdotdirect/evm-mcp-server (EVM transfers/writes, active, no swap/bridge/deploy), Coinbase Agentic Wallets (polished but keys live in Coinbase TEE), thirdweb (custodial-leaning Engine wallets), GOAT SDK (archived). Foundry MCPs exist separately (PraneshASP/foundry-mcp-server).
 - Gaps this project fills: Bitcoin UTXO spend with local keys, sign + swap + bridge in one local-key server, Solidity deploy integrated with the wallet, and non-custodial MCP + CLI + skill packaging.
@@ -82,4 +84,4 @@ Method: deep-research workflow (106 agents, adversarial 3-vote verification per 
 
 - Sepolia successor naming/launch (watch ethereum-magicians thread; re-check before hardcoding testnet defaults long-term).
 - Whether to add THORChain adapter for native BTC-EVM swaps in a later phase.
-- MCP SDK v2 migration once 2.0 stable proves out.
+- ~~MCP SDK v2 migration once 2.0 stable proves out~~ (moot: MCP face removed in v0.2.0).

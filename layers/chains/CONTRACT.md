@@ -17,7 +17,7 @@ All wrapped in the core envelope ([../core/schema/envelope.json](../core/schema/
 - Chain info: [schema/chain-info-output.json](schema/chain-info-output.json). Postconditions: EVM `rpcUrls` contain only keyless http(s) URLs (no `${API_KEY}` templates, no websockets); Bitcoin networks are the builtin three (bitcoin, signet, testnet=testnet4).
 - Chain check: [schema/chain-check-output.json](schema/chain-check-output.json). Postcondition: `match` compares the RPC's reported `eth_chainId` to the resolved id (guards against a wrong or lying endpoint).
 
-Process-internal (for read/sign/send layers, never over CLI/MCP): `toViemChain`, `evmClient` (ranked fallback transport), `esploraGet`.
+Process-internal (for read/sign/send layers, never over the CLI): `toViemChain`, `evmClient` (ranked fallback transport), `esploraGet`.
 
 ## Events
 

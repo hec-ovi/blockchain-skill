@@ -1,0 +1,20 @@
+{
+  "name": "blockchain-skill",
+  "interface": {
+    "displayName": "Agent Wallet Skill"
+  },
+  "plugins": [
+    {
+      "name": "agent-wallet-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/agent-wallet-codex"
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

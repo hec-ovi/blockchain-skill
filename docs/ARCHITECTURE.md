@@ -1,8 +1,8 @@
 # Architecture
 
-One repo ships three faces over one engine: a CLI (any OS, any agent that can shell out), an MCP server (stdio), and Claude Code skills (gbrain-style router plus fat sub-skills). All three call the same layer code and emit the same envelope, so behavior is identical no matter how an agent reaches it.
+One repo ships two faces over one engine: a CLI (any OS, any agent that can shell out) and one fat agent skill replicated to every discovery convention (root, `skills/`, Claude and Codex plugin dirs). Both call the same layer code and emit the same envelope, so behavior is identical no matter how an agent reaches it.
 
-Working name: `agent-wallet` (CLI bin, plugin name, MCP registry `io.github.hec-ovi/agent-wallet`). Repo stays `blockchain-skill`.
+Working name: `agent-wallet` (CLI bin, plugin name). Repo stays `blockchain-skill`.
 
 ## Non-negotiables
 
@@ -28,11 +28,11 @@ Each layer folder owns `CONTRACT.md`, `schema/`, `src/`, `tests/`, `fixtures/`, 
 | 8 | `layers/contracts` | Scaffold, compile (forge, solc-js fallback), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
 | 9 | `layers/swap` | Quote + execute, ports-and-adapters: CoW (primary), KyberSwap (fallback), Uniswap direct-to-router (backstop) | write |
 | 10 | `layers/bridge` | Cross-chain route/quote/execute/status via LI.FI adapter | write |
-| 11 | `layers/agentio` | The only composition point: CLI (`agent-wallet <verb>`) + MCP server (stdio) exposing the same verbs with the same envelopes; resume of multi-step state | n/a |
+| 11 | `layers/agentio` | The only composition point: CLI (`agent-wallet <verb>`) exposing every layer's verbs with the same envelopes; resume of multi-step state | n/a |
 
 Ripple rule: `src/`-only changes ripple nowhere. Contract changes are additive (contractVersion minor bump) or new-shape-alongside for breaking.
 
-### Envelope (every CLI/MCP response, every cross-layer value)
+### Envelope (every CLI response, every cross-layer value)
 
 ```json
 {
@@ -55,26 +55,30 @@ Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` 
 
 ## gbrain skills (context engineering)
 
-`skills/` ships one router plus fat sub-skills, all flat (no nesting), packaged as one plugin:
+One fat skill, replicated to every discovery convention so any agent CLI finds it (mirrors the sibling research-skill layout):
 
-- `skills/agent-wallet/` : router. Tiny SKILL.md that says what exists and routes by intent to a sub-skill; mirrors docs/INDEX.md.
-- Sub-skills, one per hard operation: `wallet-setup` (create/import/unlock), `wallet-send` (receive addresses + native/ERC-20/BTC send), `wallet-sign` (raw tx, EIP-712, PSBT), `wallet-swap`, `wallet-bridge`, `contract-deploy` (author/compile/deploy/verify), `contract-use` (call/write/learn about deployed contracts).
+- `SKILL.md` (repo root): the canonical skill, self-contained (operations plus reference appendixes, no external links).
+- `skills/agent-wallet/SKILL.md`: byte-identical copy (container-dir convention for skill installers).
+- `plugins/agent-wallet/skills/agent-wallet/SKILL.md` + `plugins/agent-wallet/.claude-plugin/plugin.json`: the Claude Code plugin.
+- `plugins/agent-wallet-codex/` (`.codex-plugin/plugin.json`, same skill copy, `commands/agent-wallet.md`): the Codex plugin.
+- Marketplaces: `.claude-plugin/marketplace.json` (Claude) and `.agents/plugins/marketplace.json` (Codex/agents).
+
+`tests/check_skill.sh` enforces the copies stay byte-identical, frontmatter stays pushy, versions stay in lockstep, and the load-bearing safety rules survive edits. It runs as part of `npm test`.
 
 Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
 
-- SKILL.md body ~300 tokens, hard cap 500: purpose sentence, when to use (and when not), imperative numbered checklist of CLI/MCP calls, links into `references/`.
-- Deep material (fee strategies, PSBT details, Solidity patterns, troubleshooting) lives in per-skill `references/*.md`, loaded only when followed.
-- Descriptions are pushy trigger statements with explicit actions and chain names, mutually non-overlapping (send vs swap vs bridge disambiguated in the description itself).
+- One self-contained SKILL.md: purpose sentence, when to use, imperative numbered checklists of CLI calls per operation, then reference appendixes (keys, sending, adapters, Solidity) and anti-patterns.
+- The description is a pushy trigger statement with explicit actions and chain names.
 - Multi-step flows (swap, bridge, deploy) externalize progress to `~/.agent-wallet/state/<op>.json` so an agent can resume without replaying context.
-- MCP tools mirror CLI verbs 1:1, thick verbs (deploy = compile + estimate + gate + sign + broadcast + verify), enum-constrained params (chain, asset), unit-suffixed names (amountWei), descriptions under 250 words with one canonical example and steering errors.
+- CLI verbs are thick (deploy = compile + estimate + gate + sign + broadcast + verify), with enum-constrained params (chain, asset), unit-suffixed names (amountWei), and steering errors.
 
 `docs/INDEX.md` is the resolver: "the thing you want to change" to "the one folder to open", for both users of the toolkit and future maintainer agents.
 
 ## Delivery
 
-- TypeScript, Node >= 20. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, @modelcontextprotocol/sdk 1.29.x, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
-- Packaging mirrors the siblings: `.mcp.json` (stdio launch), `.claude-plugin/plugin.json` + `marketplace.json`, `server.json` (npm registry entry), npm bin `agent-wallet`. Versions in lockstep across all manifests, enforced by a distribution test (which also bans em/en dashes in docs).
-- Install routes: `npx agent-wallet`, `npx skills add hec-ovi/blockchain-skill`, `/plugin marketplace add`, manual MCP registration.
+- TypeScript, Node >= 20. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
+- Packaging mirrors the siblings: root `SKILL.md`, `skills/agent-wallet/`, `plugins/agent-wallet/` (Claude), `plugins/agent-wallet-codex/` (Codex), `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, npm bin `agent-wallet`. Versions in lockstep across all manifests, enforced by `tests/check_skill.sh` and the distribution test (which also bans em/en dashes in docs).
+- Install routes: `npx agent-wallet`, `npx skills add hec-ovi/blockchain-skill`, `/plugin marketplace add`.
 
 ## Testing
 
@@ -88,7 +92,7 @@ Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
 2. `core` (envelope + validation + errors + state store).
 3. `keys` (mnemonic, HD, keystore v3). 4. `chains`. 5. `read`. 6. `sign`. 7. `gate`. 8. `send` (first full e2e: create wallet, fund via faucet, send on a public testnet, confirm).
 9. `learn`. 10. `contracts` (second e2e: author, deploy, call on Base Sepolia). 11. `swap`. 12. `bridge`.
-13. `agentio` (CLI grows per layer from step 2; MCP server formalized here).
+13. `agentio` (CLI grows per layer from step 2).
 14. Skills + plugin + INDEX resolver. 15. Hardening: distribution tests, docs, repo surface.
 
 ## Out of scope for now

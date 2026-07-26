@@ -1,0 +1,41 @@
+{
+  "name": "agent-wallet-codex",
+  "version": "0.2.0",
+  "description": "Non-custodial agent wallet toolkit: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain.",
+  "author": {
+    "name": "Hector Oviedo",
+    "url": "https://github.com/hec-ovi"
+  },
+  "homepage": "https://github.com/hec-ovi/blockchain-skill",
+  "repository": "https://github.com/hec-ovi/blockchain-skill",
+  "license": "MIT",
+  "keywords": [
+    "blockchain",
+    "wallet",
+    "non-custodial",
+    "ethereum",
+    "bitcoin",
+    "evm",
+    "solidity",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Wallet",
+    "shortDescription": "Non-custodial on-chain wallet for agents (EVM and Bitcoin)",
+    "longDescription": "Create and import wallets, check balances, send native coin, ERC-20 and BTC, swap via DEX aggregators, bridge across chains, and author, deploy, verify, call, or write Solidity contracts. Keys stay on your machine, encrypted; transactions go straight to public RPC endpoints. Mainnet is denied until explicitly allowed.",
+    "developerName": "Hector Oviedo",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/hec-ovi/blockchain-skill",
+    "defaultPrompt": [
+      "Use the agent-wallet skill to create a wallet, check a balance, or send funds on-chain."
+    ],
+    "screenshots": [],
+    "brandColor": "#3C3C3C"
+  }
+}

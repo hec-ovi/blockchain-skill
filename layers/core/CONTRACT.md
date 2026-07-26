@@ -12,7 +12,7 @@ Library layer: no runtime inputs of its own. Callers pass values to be validated
 
 ## Outputs
 
-- Envelope: every cross-layer value and every CLI/MCP response. Schema: [schema/envelope.json](schema/envelope.json). Postconditions: `ok=true` implies `error` absent; `ok=false` implies `error` present with a closed-set `code`; `meta.layer`, `meta.backend`, `meta.traceId` always set.
+- Envelope: every cross-layer value and every CLI response. Schema: [schema/envelope.json](schema/envelope.json). Postconditions: `ok=true` implies `error` absent; `ok=false` implies `error` present with a closed-set `code`; `meta.layer`, `meta.backend`, `meta.traceId` always set.
 
 ## Events
 

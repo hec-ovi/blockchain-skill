@@ -20,7 +20,7 @@ All wrapped in the core envelope ([../core/schema/envelope.json](../core/schema/
 - Wallet list: [schema/wallet-list-output.json](schema/wallet-list-output.json).
 - Addresses: [schema/address-list-output.json](schema/address-list-output.json). Postcondition: EVM path `m/44'/60'/0'/0/i`; BTC `m/86'` (p2tr, default) or `m/84'` (p2wpkh).
 
-`unlockMnemonic(name, passphrase)` is process-internal for the sign layer; it never crosses the CLI/MCP boundary.
+`unlockMnemonic(name, passphrase)` is process-internal for the sign layer; it never crosses the CLI boundary.
 
 ## Events
 

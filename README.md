@@ -2,16 +2,19 @@
 
 Toolkit that lets any AI agent operate a wallet directly on-chain: create wallets, receive, send, swap, bridge, sign, deploy and verify Solidity contracts, and learn how deployed contracts work. Keys are generated and stored on your own machine (encrypted keystore v3), and transactions go straight to public RPC endpoints. No MetaMask, no exchange, no custodial anything.
 
-Ships three faces over one engine: a CLI (`agent-wallet <verb>`), an MCP server (stdio), and Claude Code skills. Same verbs, same JSON envelope everywhere.
+Ships two faces over one engine: a CLI (`agent-wallet <verb>`) and one fat agent skill replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs), so any agent CLI finds it. Same verbs, same JSON envelope everywhere.
 
 ## Install
 
-- CLI: `npx agent-wallet help`
-- Skills: `npx skills add hec-ovi/blockchain-skill`
-- Plugin: `/plugin marketplace add hec-ovi/blockchain-skill`
-- MCP: register the server from `.mcp.json` (`node bin/agent-wallet.ts mcp`)
+- CLI: `curl -fsSL https://raw.githubusercontent.com/hec-ovi/blockchain-skill/HEAD/bin/init.sh | bash` (installs or updates the toolkit to `~/.local/share/agent-wallet`, links `agent-wallet` onto PATH, verifies), then `agent-wallet help`
+- Skill (any CLI): `/skills add hec-ovi/blockchain-skill` or `npx skills add hec-ovi/blockchain-skill`
+- Plugin (Claude Code): `/plugin marketplace add hec-ovi/blockchain-skill`
 
-Requires Node >= 22.18 (runs the TypeScript directly). Put secrets in a git-ignored `.env` (see `.env.example`); the CLI and MCP server load it automatically. At minimum set `AGENT_WALLET_PASSPHRASE` (encrypts the keystore).
+Requires Node >= 22.18 (runs the TypeScript directly). Put secrets in a git-ignored `.env` (see `.env.example`); the CLI loads it automatically. At minimum set `AGENT_WALLET_PASSPHRASE` (encrypts the keystore).
+
+## MCP discontinued
+
+The MCP server face was discontinued in v0.2.0: `.mcp.json`, the `agent-wallet mcp` command, and the `@modelcontextprotocol/sdk` dependency were removed. The CLI and the skills expose the same verbs with the same JSON envelope, so nothing is lost; drive the CLI from any agent instead.
 
 ## Capabilities
 
@@ -45,7 +48,7 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 The toolkit was checked at three levels: an automated suite, live calls against real public networks, and a full run driven by a separate AI agent acting as a first-time user.
 
-**Automated suite.** `npm test` runs 95 tests with no external network: schema and contract tests for every layer, key derivation checked against the official BIP-86 and BIP-84 vectors, Bitcoin coin selection, envelope validation, and end-to-end runs of the real CLI and MCP server.
+**Automated suite.** `npm test` runs 90 tests with no external network: schema and contract tests for every layer, key derivation checked against the official BIP-86 and BIP-84 vectors, Bitcoin coin selection, envelope validation, end-to-end runs of the real CLI, and `tests/check_skill.sh`, which keeps the four skill copies byte-identical and the manifest versions in lockstep.
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): balance and tip reads on Ethereum Sepolia and Bitcoin signet, a keyless Sourcify ABI fetch for WETH, and live swap and bridge quotes from CoW, KyberSwap, and LI.FI.
 
@@ -64,4 +67,4 @@ The toolkit was checked at three levels: an automated suite, live calls against 
 
 Contract-isolated layers under `layers/`, coupled only through one JSON envelope. Each layer owns its `CONTRACT.md`, `schema/`, `src/`, and `tests/`. `docs/INDEX.md` maps what you want to change to the one folder to open. See `docs/ARCHITECTURE.md` and `docs/RESEARCH.md` for the design and the 2026 stack choices.
 
-Layer order, easy to hard: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (the CLI + MCP surface).
+Layer order, easy to hard: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (the CLI surface).

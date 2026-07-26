@@ -16,8 +16,8 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Swap quotes and execution, aggregator adapters | `layers/swap/` |
 | Cross-chain bridging | `layers/bridge/` |
 | Self-serve testnet funding (CDP faucet) | `layers/faucet/` |
-| CLI verbs, MCP tools, output formatting | `layers/agentio/` |
-| Agent-facing skills (SKILL.md, references) | `skills/<operation>/` |
-| Packaging, manifests, install routes | repo root + `.claude-plugin/` |
+| CLI verbs, output formatting | `layers/agentio/` |
+| Agent-facing skill (fat SKILL.md and its copies) | `SKILL.md` (canonical), `skills/`, `plugins/` |
+| Packaging, manifests, install routes | repo root + `.claude-plugin/` + `.agents/` + `plugins/` |
 
 Build status: all layers shipped and tested. This table is the contract for where things live; update it the moment a layer lands or moves.

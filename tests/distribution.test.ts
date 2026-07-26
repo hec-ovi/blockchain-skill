@@ -10,23 +10,22 @@ const readJson = (p: string) => JSON.parse(read(p));
 describe("distribution: manifests in lockstep", () => {
   const pkg = readJson("package.json");
 
-  it("version matches across package.json, plugin.json and marketplace.json", () => {
-    expect(readJson(".claude-plugin/plugin.json").version).toBe(pkg.version);
+  it("version matches across package.json, both plugin manifests and the marketplace", () => {
+    expect(readJson("plugins/agent-wallet/.claude-plugin/plugin.json").version).toBe(pkg.version);
+    expect(readJson("plugins/agent-wallet-codex/.codex-plugin/plugin.json").version).toBe(pkg.version);
+    const market = readJson(".claude-plugin/marketplace.json");
+    expect(market.metadata.version).toBe(pkg.version);
+    expect(market.plugins[0].version).toBe(pkg.version);
   });
 
-  it("plugin/marketplace name is agent-wallet and the marketplace points at the repo root", () => {
-    expect(readJson(".claude-plugin/plugin.json").name).toBe("agent-wallet");
+  it("plugin/marketplace name is agent-wallet and the marketplace points at the plugin dir", () => {
+    expect(readJson("plugins/agent-wallet/.claude-plugin/plugin.json").name).toBe("agent-wallet");
     const market = readJson(".claude-plugin/marketplace.json");
     const plugin = market.plugins.find((p: any) => p.name === "agent-wallet");
     expect(plugin).toBeDefined();
-    expect(plugin.source).toBe("./");
-  });
-
-  it(".mcp.json launches the stdio server via the bin", () => {
-    const mcp = readJson(".mcp.json");
-    const server = mcp.mcpServers["agent-wallet"];
-    expect(server.command).toBe("node");
-    expect(server.args).toContain("mcp");
+    expect(plugin.source).toBe("./plugins/agent-wallet");
+    const agents = readJson(".agents/plugins/marketplace.json");
+    expect(agents.plugins[0].source.path).toBe("./plugins/agent-wallet-codex");
   });
 });
 
@@ -34,8 +33,12 @@ describe("distribution: skills present and well-formed", () => {
   const skillsDir = join(root, "skills");
   const skills = readdirSync(skillsDir).filter((d) => existsSync(join(skillsDir, d, "SKILL.md")));
 
-  it("ships the router plus the six fat sub-skills", () => {
-    expect(skills.sort()).toEqual(["agent-wallet", "contract-deploy", "contract-use", "wallet-bridge", "wallet-send", "wallet-setup", "wallet-swap"]);
+  it("ships the single fat skill at root, in skills/, and in both plugin dirs", () => {
+    expect(skills).toEqual(["agent-wallet"]);
+    for (const p of ["SKILL.md", "plugins/agent-wallet/skills/agent-wallet/SKILL.md", "plugins/agent-wallet-codex/skills/agent-wallet/SKILL.md"]) {
+      expect(existsSync(join(root, p)), `${p} missing`).toBe(true);
+      expect(read(p)).toBe(read("SKILL.md"));
+    }
   });
 
   it("every SKILL.md has name + a pushy description in frontmatter", () => {
@@ -47,15 +50,6 @@ describe("distribution: skills present and well-formed", () => {
       const desc = fm![1].match(/description:\s*(.+)/)?.[1] ?? "";
       expect(desc.length, `${s} description too short`).toBeGreaterThan(80);
       expect(desc.toLowerCase()).toContain("trigger");
-    }
-  });
-
-  it("every referenced references/*.md file exists", () => {
-    for (const s of skills) {
-      const body = read(`skills/${s}/SKILL.md`);
-      for (const m of body.matchAll(/\]\((references\/[a-z0-9-]+\.md)\)/g)) {
-        expect(existsSync(join(skillsDir, s, m[1]!)), `${s} links missing ${m[1]}`).toBe(true);
-      }
     }
   });
 });
@@ -90,8 +84,11 @@ describe("distribution: no em or en dashes in docs and manifests", () => {
     "docs/RESEARCH.md",
     "docs/ARCHITECTURE.md",
     "docs/INDEX.md",
-    ".claude-plugin/plugin.json",
+    "SKILL.md",
     ".claude-plugin/marketplace.json",
+    ".agents/plugins/marketplace.json",
+    "plugins/agent-wallet/.claude-plugin/plugin.json",
+    "plugins/agent-wallet-codex/.codex-plugin/plugin.json",
   ];
 
   it("shipped docs use plain hyphens only", () => {
