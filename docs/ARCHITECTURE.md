@@ -4,37 +4,48 @@ One repo ships two faces over one engine: a self-contained CLI (any OS, any agen
 
 Working name: `agent-wallet` (CLI bin, plugin name). npm package name: `agent-wallet-skill`. Repo stays `blockchain-skill`.
 
-The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `npm run build` (esbuild). Skill installers that copy this repo (noob `/skills add`, root `SKILL.md`) include that file, so the agent runs verbs with only Node on PATH. Host installs use the same file via `npm i -g agent-wallet` or `./agent-wallet` after build.
+The ship unit for agents is `dist/agent-wallet.mjs`: one ESM file produced by `npm run build` (esbuild). Skill installers that copy this repo (noob `/skills add`, root `SKILL.md`) include that file, so the agent runs verbs with only Node on PATH. Host installs use the same file via `./agent-wallet` after build, or `npm i -g agent-wallet-skill` when the package is published.
 
 ## Non-negotiables
 
 - Non-custodial, barehand: keys are generated locally, stored only as a passphrase-encrypted keystore v3 file (mode 0600), and signing happens in-process. Broadcast goes straight to public RPC / Esplora endpoints. No MetaMask, no exchange, no hosted signer.
-- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, 1inch, LI.FI key) are optional accelerators, never requirements.
-- Chain-agnostic: EVM chains resolve from viem/chains + chainid.network (2658 chains) via defineChain; Bitcoin ships mainnet/signet/testnet4. New chain families are new adapters, not rewrites.
-- Fail closed: every value crossing a layer boundary is a schema-validated JSON envelope. A deterministic gate layer authorizes every state-changing operation before signing. Prompt text is never an enforcement mechanism.
+- Keyless by default: every default backend works with zero API keys (see docs/RESEARCH.md). Keyed backends (Etherscan v2, LI.FI key, CDP for faucet) are optional accelerators, never requirements.
+- Chain-agnostic: EVM chains resolve from viem/chains + chainid.network via defineChain; Bitcoin ships mainnet/signet/testnet4. New chain families are new adapters, not rewrites.
+- Fail closed: CLI responses and multi-step state are schema-shaped JSON envelopes. A deterministic gate layer authorizes every state-changing operation before signing. Prompt text is never an enforcement mechanism.
 
-## Layers (easy to hard, each a blackbox)
+## Layers
 
-Each layer folder owns `CONTRACT.md`, `schema/`, `src/`, `tests/`, `fixtures/`, optional `SKILL.md` (maintenance notes). Outsiders read only CONTRACT.md + schema/. Cross-layer calls are function calls carrying envelope-shaped, schema-validated data; no layer imports another layer's src internals, only its published entry.
+Each layer folder owns `CONTRACT.md`, `schema/`, `src/`, `tests/` (and optional fixtures). `docs/INDEX.md` maps "what you want to change" to one folder.
+
+### Isolation model (what is true today)
+
+This is **module isolation with published surfaces**, not process isolation and not a microservices mesh.
+
+- **Human / agent maintainers** of another layer should open only that layer's `CONTRACT.md` + `schema/` first. That is the contract for inputs, outputs, and errors.
+- **TypeScript callers** may import only the *published* modules of another layer (for example `keys/src/wallet.ts`, `gate/src/policy.ts`, `sign/src/evm.ts`, `*/src/api.ts`). Private files (for example `keys/src/keystore.ts`) are not for cross-layer import. Enforced by `tests/import-boundary.test.ts`.
+- **`agentio`** is the only composition root for the CLI. It wires verbs to layer APIs and formats envelopes for stdout.
+- **`core`** is the shared leaf (envelope, home, config, state). Every layer may use it.
+- Values that leave the process (CLI stdout, state files) go through the envelope shape. In-process calls use typed functions; they are not re-serialized at every hop.
+
+Ripple rule for contracts: additive changes bump a minor `contractVersion`; breaking shapes are added alongside and callers migrate. Pure private-src edits that keep published modules stable do not force callers to change.
 
 | # | Layer | Purpose | Network |
 |---|---|---|---|
 | 0 | `layers/core` | Envelope type, JSON Schema validation (fail closed), closed error codes, trace ids, state-file store for multi-step flows | none |
 | 1 | `layers/keys` | Create/import BIP-39 wallet, HD derivation (EVM secp256k1, BTC taproot/segwit), keystore v3 encrypt/decrypt, list accounts/addresses | none |
 | 2 | `layers/chains` | Resolve any chain (id, name, alias) to RPC endpoints, explorer, currency; viem fallback transport with ranking; Esplora endpoint selection for BTC | read |
-| 3 | `layers/read` | Balances (native + ERC-20), UTXOs, tx lookup/history, fee estimation, receive addresses | read |
+| 3 | `layers/read` | Balances (native + ERC-20), UTXOs, tx lookup/history, fee estimation | read |
 | 4 | `layers/sign` | Build + sign offline: EVM tx (EIP-1559), EIP-712 typed data, messages, BTC PSBT | none |
-| 5 | `layers/gate` | Deterministic policy: chain allowlist (default testnet only, mainnet is explicit opt-in), per-tx spend caps, dry-run required flags. Returns allow/deny + reason. Fail closed | none |
-| 6 | `layers/send` | Broadcast signed tx, nonce management, confirmation tracking, fee bump/replace | write |
+| 5 | `layers/gate` | Deterministic policy: chain allowlist (default testnet only, mainnet is explicit opt-in), per-tx spend caps. Returns allow/deny + reason. Fail closed | none |
+| 6 | `layers/send` | End-to-end transfer: gate, sign, broadcast, optional EVM wait | write |
 | 7 | `layers/learn` | Contract intelligence: verified source + ABI via Sourcify -> Blockscout -> Etherscan v2 (keyed, optional) -> WhatsABI for unverified; proxy resolution | read |
-| 8 | `layers/contracts` | Scaffold, compile (forge, solc-js fallback), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
-| 9 | `layers/swap` | Quote + execute, ports-and-adapters: CoW (primary), KyberSwap (fallback), Uniswap direct-to-router (backstop) | write |
+| 8 | `layers/contracts` | Compile (solc-js), deploy, verify (sourcify/blockscout keyless, etherscan keyed), call/write deployed contracts | write |
+| 9 | `layers/swap` | Quote + execute, ports-and-adapters: CoW (primary), KyberSwap (fallback), Uniswap quote backstop | write |
 | 10 | `layers/bridge` | Cross-chain route/quote/execute/status via LI.FI adapter | write |
-| 11 | `layers/agentio` | The only composition point: CLI (`agent-wallet <verb>`) exposing every layer's verbs with the same envelopes; session `init` doctor; resume of multi-step state | n/a |
+| 11 | `layers/faucet` | Self-serve testnet funding via Coinbase CDP (optional keys) | write |
+| 12 | `layers/agentio` | CLI composition (`agent-wallet <verb>`), session `init` doctor, help/version | n/a |
 
-Ripple rule: `src/`-only changes ripple nowhere. Contract changes are additive (contractVersion minor bump) or new-shape-alongside for breaking.
-
-### Envelope (every CLI response, every cross-layer value)
+### Envelope (every CLI response)
 
 ```json
 {
@@ -46,60 +57,44 @@ Ripple rule: `src/`-only changes ripple nowhere. Contract changes are additive (
 }
 ```
 
-Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` carries steering text for the calling agent (what to do next), which is where tool-error context engineering lives.
+Errors are a closed set per layer, declared in that layer's CONTRACT.md. `hint` steers the calling agent (what to do next).
 
 ### Security model
 
-- Keystore: mnemonic encrypted to Web3 Secret Storage v3 (scrypt) using ethereum-cryptography primitives; interops with `cast wallet import` and geth. Passphrase comes from `AGENT_WALLET_PASSPHRASE` env or interactive prompt; it is never written to disk or logs.
-- Data dir: `~/.agent-wallet/` (override `AGENT_WALLET_HOME`): `keystore/`, `state/` (multi-step flow files), `config.json` (gate policy, chain allowlist, optional API keys).
-- Gate defaults ship safe: testnets allowed, mainnet denied until the user flips `config.json`. Every sign/send/deploy/swap/bridge passes the gate first; deny returns the reason and the exact config change that would allow it.
-- External content (RPC responses, fetched contract source) is untrusted data: schema-validated, never executed, fenced when surfaced to an agent.
+- Keystore: mnemonic encrypted to Web3 Secret Storage v3 (scrypt) using ethereum-cryptography primitives; interops with `cast wallet import` and geth. Passphrase from `AGENT_WALLET_PASSPHRASE` or `--passphrase`; never written to disk or logs.
+- Data dir: `~/.agent-wallet/` (override `AGENT_WALLET_HOME`): `keystore/`, `state/`, `cache/`, `config.json`.
+- Gate defaults: testnets allowed, mainnet denied until `config.json` opt-in. Every send/swap/bridge/deploy/write passes the gate before sign; deny includes the config change that would allow it.
+- External content (RPC responses, fetched contract source) is untrusted data: never executed as code.
 
-## gbrain skills (context engineering)
+## Skills (context engineering)
 
-One fat skill, replicated to every discovery convention so any agent CLI finds it (mirrors the sibling research-skill layout):
+One fat skill, replicated to every discovery convention:
 
-- `SKILL.md` (repo root): the canonical skill, self-contained (operations plus reference appendixes, no external links).
-- `skills/agent-wallet/SKILL.md`: byte-identical copy (container-dir convention for skill installers).
-- `plugins/agent-wallet/skills/agent-wallet/SKILL.md` + `plugins/agent-wallet/.claude-plugin/plugin.json`: the Claude Code plugin.
-- `plugins/agent-wallet-codex/` (`.codex-plugin/plugin.json`, same skill copy, `commands/agent-wallet.md`): the Codex plugin.
-- Marketplaces: `.claude-plugin/marketplace.json` (Claude) and `.agents/plugins/marketplace.json` (Codex/agents).
+- `SKILL.md` (repo root): canonical, self-contained.
+- `skills/agent-wallet/SKILL.md`: byte-identical (container-dir installers).
+- `plugins/agent-wallet/` (Claude) and `plugins/agent-wallet-codex/` (Codex).
+- Marketplaces: `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`.
 
-`tests/check_skill.sh` enforces the copies stay byte-identical, frontmatter stays pushy, versions stay in lockstep, and the load-bearing safety rules survive edits. It runs as part of `npm test`.
+`tests/check_skill.sh` keeps copies byte-identical, versions lockstep, and load-bearing safety rules present. Runs as part of `npm test`.
 
-Rules applied (from Anthropic skill-authoring guidance, researched 2026-07-22):
-
-- One self-contained SKILL.md: purpose sentence, when to use, imperative numbered checklists of CLI calls per operation, then reference appendixes (keys, sending, adapters, Solidity) and anti-patterns.
-- The description is a pushy trigger statement with explicit actions and chain names.
-- Multi-step flows (swap, bridge, deploy) externalize progress to `~/.agent-wallet/state/<op>.json` so an agent can resume without replaying context.
-- CLI verbs are thick (deploy = compile + estimate + gate + sign + broadcast + verify), with enum-constrained params (chain, asset), unit-suffixed names (amountWei), and steering errors.
-
-`docs/INDEX.md` is the resolver: "the thing you want to change" to "the one folder to open", for both users of the toolkit and future maintainer agents.
+Agent flow: resolve CLI (PATH or skill-pack launcher / `dist/agent-wallet.mjs`) -> `init` once per session -> verbs. Each verb is one process, JSON on stdout, exit.
 
 ## Delivery
 
-- TypeScript, Node >= 22.18. Runtime deps kept minimal: viem, @scure/btc-signer (+ @scure/bip32/39), ethereum-cryptography, zod. Foundry is an external binary the contracts layer detects (with solc-js as the no-Foundry fallback).
-- Packaging mirrors the siblings: root `SKILL.md`, `skills/agent-wallet/`, `plugins/agent-wallet/` (Claude), `plugins/agent-wallet-codex/` (Codex), `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, npm package `agent-wallet` with bin `dist/agent-wallet.mjs`. Versions in lockstep across all manifests, enforced by `tests/check_skill.sh` and the distribution test (which also bans em/en dashes in docs).
-- Install routes: `/skills add hec-ovi/blockchain-skill` (agent skill pack + bundled CLI), `npm i -g agent-wallet-skill` (when published), host `bin/init.sh`.
-- Build: `npm run build` -> `dist/agent-wallet.mjs`. Committed so skill add works without a local compile. `pretest` rebuilds it.
+- TypeScript, Node >= 22.18. Runtime deps: viem, @scure/*, ethereum-cryptography, solc, zod, optional CDP SDK for faucet.
+- npm package `agent-wallet-skill`, bin `dist/agent-wallet.mjs`. Versions lockstep across package.json and plugin manifests.
+- Install routes: `/skills add hec-ovi/blockchain-skill` (primary for agents), host `npm run build && ./agent-wallet`, optional `bin/init.sh`, optional npm global when published.
+- Build: `npm run build` writes `dist/agent-wallet.mjs`. The file is committed so skill add works without a local compile. `pretest` rebuilds it.
 
 ## Testing
 
-- Unit + contract tests per layer: schema round-trips validated against `schema/` exactly as shipped; external boundaries faked with fixtures; no network. This is the default `npm test`.
-- Real public-network suites are opt-in: `RUN_LIVE=1` for keyless reads and quotes (Sepolia, signet, Sourcify, CoW, Kyber, LI.FI), and a self-funding end-to-end suite on Base Sepolia that pulls gas from the faucet layer (needs a free CDP key). No local node is used anywhere.
-- Distribution test: manifest lockstep, skill descriptions, contract/schema links, no em/en dashes.
-
-## Build order (one commit per step, pushed)
-
-1. Scaffold: package.json, tsconfig, test runner (vitest), layout, README stub.
-2. `core` (envelope + validation + errors + state store).
-3. `keys` (mnemonic, HD, keystore v3). 4. `chains`. 5. `read`. 6. `sign`. 7. `gate`. 8. `send` (first full e2e: create wallet, fund via faucet, send on a public testnet, confirm).
-9. `learn`. 10. `contracts` (second e2e: author, deploy, call on Base Sepolia). 11. `swap`. 12. `bridge`.
-13. `agentio` (CLI grows per layer from step 2).
-14. Skills + plugin + INDEX resolver. 15. Hardening: distribution tests, docs, repo surface.
+- Default `npm test`: build bundle, vitest (schema/contract, offline unit, CLI e2e, import boundary, distribution), `tests/check_skill.sh`.
+- Send layer: offline gate denials and a full signet transfer with mocked Esplora (sign + broadcast path without a live node).
+- Opt-in live: `RUN_LIVE=1` for public testnet reads/quotes and self-funded Base Sepolia e2e (CDP key).
 
 ## Out of scope for now
 
-- Solana family (Jupiter adapter documented in research, not built this stage).
-- THORChain-style native BTC-EVM swaps (bridge stays EVM-to-EVM first).
+- Solana family.
+- THORChain-style native BTC-EVM swaps (bridge is EVM-to-EVM).
 - Hardware wallets and OS keychains (passphrase-encrypted file is the baseline).
+- Process-per-layer isolation or network RPC between layers.

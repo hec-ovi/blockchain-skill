@@ -32,7 +32,7 @@ test -x ./agent-wallet && echo ./agent-wallet
 test -f ./dist/agent-wallet.mjs && echo "node ./dist/agent-wallet.mjs"
 
 # E) optional registry one-shot when published (needs network + npm)
-# npx --yes agent-wallet-skill@0.3.0
+# npx --yes agent-wallet-skill@0.3.1
 ```
 
 Examples below write `agent-wallet`; replace with your resolved form (for example `.noob/skills/agent-wallet/agent-wallet` or `node .noob/skills/agent-wallet/dist/agent-wallet.mjs`).

@@ -21,7 +21,7 @@ Other skill installers: `npx skills add hec-ovi/blockchain-skill`, Claude `/plug
 Requires Node >= 22.18.
 
 ```
-npm i -g agent-wallet-skill@0.3.0
+npm i -g agent-wallet-skill@0.3.1
 agent-wallet init
 agent-wallet help
 ```
@@ -84,8 +84,8 @@ Mainnet is denied until you allow it in `~/.agent-wallet/config.json` (`{"gate":
 
 ## Architecture
 
-Contract-isolated layers under `layers/`, coupled only through one JSON envelope. Each layer owns its `CONTRACT.md`, `schema/`, `src/`, and `tests/`. `docs/INDEX.md` maps what you want to change to the one folder to open. See `docs/ARCHITECTURE.md` and `docs/RESEARCH.md`.
+Layers under `layers/` each own `CONTRACT.md`, `schema/`, `src/`, and `tests/`. Cross-layer TypeScript imports are limited to published modules (import-boundary test); the CLI composition root is `agentio`. Outbound agent I/O is one JSON envelope. See `docs/ARCHITECTURE.md` and `docs/INDEX.md`.
 
 Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, bridge, faucet, agentio (CLI + init).
 
-Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). That file is what skill installs and `npm pack` ship so agents need only Node, not a source tree install.
+Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). Skill installs and the package ship that file so agents need only Node.
