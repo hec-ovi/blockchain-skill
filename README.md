@@ -65,6 +65,8 @@ Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"al
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
+**Agent benchmark (dual noob peers).** Full Sepolia matrix through the noob CLI with a **local Qwen3.6-35B Q8** model (small MoE on purpose: skill quality edge case), two wallets, agent-driven send / wrap / unwrap / Uniswap swap / ERC-20 both ways. On-chain tx hashes and method: [`docs/BENCHMARK.md`](docs/BENCHMARK.md).
+
 ## Architecture
 
 Layers under `layers/` each own `CONTRACT.md`, `schema/`, `src/`, and `tests/`. Cross-layer TypeScript imports are limited to published modules (import-boundary test); the CLI composition root is `agentio`. Outbound agent I/O is one JSON envelope. See `docs/ARCHITECTURE.md` and `docs/INDEX.md`.

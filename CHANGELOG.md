@@ -3,6 +3,7 @@
 ## 0.4.2
 
 - Gate default: mainnet allowed (set allowMainnet false to lock).
+- Documented dual noob peer Sepolia agent benchmark (local Qwen3.6-35B Q8): `docs/BENCHMARK.md`.
 
 ## 0.4.1
 

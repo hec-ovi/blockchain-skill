@@ -18,5 +18,6 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Bundled CLI build (esbuild) | `scripts/build.mjs` -> `dist/agent-wallet.mjs` |
 | Agent-facing skill (fat SKILL.md and its copies) | `SKILL.md` (canonical), `skills/`, `plugins/` |
 | Packaging, manifests, install routes | repo root + `.claude-plugin/` + `.agents/` + `plugins/` |
+| Live dual-agent noob benchmark (Sepolia, local Qwen3.6-35B Q8) | `docs/BENCHMARK.md` |
 
 Build status: all layers shipped and tested. This table is the contract for where things live; update it the moment a layer lands or moves.
