@@ -109,7 +109,7 @@ Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"al
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
-**Agent benchmark:** dual noob peers on Sepolia with a local mid-size model (see bottom of this README). Solidity authoring and deploy were out of scope for that run, and the contract workflow has not yet been benchmarked against a live agent.
+**Agent benchmark:** two peers on Sepolia, all 25 CLI verbs measured (see bottom of this README). Covers wallet creation, agent-to-agent payment, swap, and the full Solidity path from spec to a deployed contract that the other agent then calls.
 
 ## Architecture
 
@@ -121,48 +121,89 @@ Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ES
 
 ---
 
-## Agent benchmark: dual noob peers on Sepolia
+## Agent benchmark: two peers on Sepolia, wallet and Solidity
 
-Live end-to-end of **agent-wallet 0.4.2** through the **noob** agent CLI (not a scripted harness that calls verbs for the agent). Two workspaces, two wallets, natural-language prompts. Every tx below confirmed on Ethereum Sepolia.
+Live end-to-end of **agent-wallet 0.5.0**: two independent agent workspaces, two wallets, ordinary English prompts. No verb was chosen for the agents. Every command below is one an agent picked and typed itself after reading the skill.
 
 ### Setup
 
 | Piece | Choice | Why |
 |---|---|---|
-| Runtime | noob CLI `0.5.1` (`noob exec -p … --yolo`) | Real agent loop: load skill, resolve CLI, run verbs, parse JSON envelopes |
-| Skill | Pack with bundled `dist/agent-wallet.mjs` **0.4.2** | Same as `/skills add`; Node only, no `npm install` in the agent workspace |
-| Model | **Qwen3.6-35B-A3B**, GGUF **Q8_0**, local (~35 GiB) | Small MoE (35B total, ~3B active), not a frontier cloud model. Edge case for skill quality: if a mid-size local model can follow the skill and CLI, success is not only "huge model invents the right flags" |
+| Runtime | noob CLI `0.5.1` (`noob exec -p ... --yolo`) | Real agent loop: load skill, resolve CLI, run verbs, read JSON envelopes |
+| Install | `git clone` of this repo into `.noob/skills/`, the route `/skills add` takes | Node only, no `npm install` in the agent workspace |
+| Model (bulk) | **Qwen3.6-35B-A3B**, GGUF **Q8_0**, local | Small MoE, ~3B active. The question is not whether it writes good Solidity; it is whether the skill carries a weak model through the job |
+| Model (tail) | **Claude Haiku 4.5** | A second model family on the same skill, for the last verbs |
+| Server | llama.cpp Vulkan, AMD Strix Halo (gfx1151), **64K context, one slot** | Deliberately tight: one request at a time, compaction at 48K |
 | Network | Ethereum Sepolia (`11155111`) | Public testnet, real RPCs, real gas, real Uniswap pools |
-| Peers | Two keystores, two addresses | Cross-wallet ETH and ERC-20, not one wallet talking to itself |
-
-**Out of scope for this run:** Solidity authoring / deploy / write, Bitcoin, mainnet.
 
 | Peer | Address |
 |---|---|
-| A | `0xB8550bc8f382e3Ea8F70949Fb74352bfC69A7650` |
-| B | `0xD4b2375ebFfade9b6010C77e895B591FB9d5D35A` |
+| A | `0x0C694913133AF426Dbb25504d3c13C0849C7F60b` |
+| B | `0x9B2947f51003e4A6A5EE02a7e9f508CCF9171477` |
 
-Keys in per-workspace keystore v3; gas funded externally (toolkit has no faucet). Agent ran `init`, then verbs from short English prompts (`send …`, `wrap …`, `swap exactly …`, `send … USDC …`).
+Each agent created its own wallet from a plain request. Peer A was funded once from outside; every transfer after that is agent-driven.
+
+### Verb coverage
+
+**25 of 25 verbs, measured.** A shim over the bundled CLI in each workspace logged every verb the models actually invoked, so this is counted, not asserted.
+
+```
+init            version         wallet-create   wallet-import   wallet-list
+wallet-addresses wallet-export  balance         fees            tx
+utxos           chain-resolve   chain-check     send            wrap
+unwrap          swap-quote      swap            contract-learn  contract-compile
+contract-deploy contract-call   contract-write  contract-step   sandbox-run
+```
 
 ### On-chain matrix (agent-driven)
 
-| Step | From | Detail | Tx |
+| Block | From | Action | Tx |
 |---|---|---|---|
-| ETH send | A → B | peer transfer | [0x7aed43f3…](https://sepolia.etherscan.io/tx/0x7aed43f3e7499f67720c0a28e5528691a64b0721bb3b39d52c9f5c7b30b5530a) |
-| ETH send | B → A | peer return | [0x3d61715a…](https://sepolia.etherscan.io/tx/0x3d61715a35093e0ab484e9ef30e6d410afeb54e187f4cb222dbc221de95587a1) |
-| wrap | B | 0.00004 ETH → WETH | [0xc3629daf…](https://sepolia.etherscan.io/tx/0xc3629daf5b7d33712851176a15036e4c76e82749a000e80ed4274325baad80ba) |
-| ETH send | A → B | gas top-up 0.00005 | [0x0b069ddf…](https://sepolia.etherscan.io/tx/0x0b069ddf45cf043d84b29f1f8a138582b3317356e4f55e4fb47fc254aab31e00) |
-| approve | B | WETH for Uniswap | [0xe8572840…](https://sepolia.etherscan.io/tx/0xe857284016b921c0262bd02e4b78d7c9d7911839c88cae8c940dfb0dbd38ce49) |
-| **swap** | B | Uniswap WETH → USDC | [0xca646fa6…](https://sepolia.etherscan.io/tx/0xca646fa63bfad96257930507c07a2445cf42b7bc71338092a511d1f8425e5dd5) |
-| **ERC-20** | B → A | 0.5 USDC | [0xe1568c00…](https://sepolia.etherscan.io/tx/0xe1568c0093cfc1992d60b7aed70024a8476c1015a0d65145269ffeec00463c92) |
-| wrap | A | 0.0001 ETH → WETH | [0x9cd776b2…](https://sepolia.etherscan.io/tx/0x9cd776b2abcdb963e1e87818ecce8ed0b1750d458aedbbe2819df590617b95ec) |
-| ETH send | A → B | 0.00005 ETH | [0xb0184596…](https://sepolia.etherscan.io/tx/0xb01845960d24f0a22a3e8c50871fb1bc7cc2bc4863ca357760d01bcbfc252882) |
-| **unwrap** | B | 0.00003 WETH → ETH | [0xd15928f9…](https://sepolia.etherscan.io/tx/0xd15928f9055d2a80ebf153eca4e03af7ee528f2f61eb4ae4c5ca4ce26512cd3c) |
-| ETH send | B → A | 0.00005 ETH | [0x37239c2d…](https://sepolia.etherscan.io/tx/0x37239c2df65e2467e351be966d64aad40c833ced036f23bf9768791392af636b) |
-| **ERC-20** | A → B | 0.2 USDC | [0xb6561977…](https://sepolia.etherscan.io/tx/0xb6561977b9ef9309c56230aab8a29f2e398c3dbdff3aeee9689ee644df1dcdf4) |
-
-Also agent-OK (reads): `balance` (native + token), `fees`, `chain-check`, `tx`, `swap-quote`, `contract-learn` (WETH), `wallet-export`.
+| 11368256 | (external) | funding peer A, 0.009 ETH | [0xe311e2f5…](https://sepolia.etherscan.io/tx/0xe311e2f5f9014dd41161b97f86bef8fe4efdb6dc4884b5b4517ffccb21fc5ce1) |
+| 11368267 | peer A | **pays peer B** 0.002 ETH | [0x350f2f7f…](https://sepolia.etherscan.io/tx/0x350f2f7ff73c5aace4bb6e9f3d2eb14576cd8e0877847c7124bab06d86168c63) |
+| 11368345 | peer A | wrap 0.001 ETH to WETH | [0x95d31902…](https://sepolia.etherscan.io/tx/0x95d31902382fd3a9f97f765bfe1f45692be98edbe09490b70535a91a461dc646) |
+| 11368350 | peer A | approve router | [0x778253c4…](https://sepolia.etherscan.io/tx/0x778253c46fa128e7c051c45342c741d65b94f7f8aefe1408adfb5077e8f50e6f) |
+| 11368351 | peer A | **swap** WETH to USDC (Uniswap) | [0x6bdd23dd…](https://sepolia.etherscan.io/tx/0x6bdd23dd6c0359d9834131bfe1750224cf4a07e28aa457441cfaf25e0c832a5b) |
+| 11368687 | peer B | **calls a contract peer A deployed** | [0x2e732600…](https://sepolia.etherscan.io/tx/0x2e7326005cb56deb1c7af0dba745e0c1775153d06f0f7e72dc1d5cbcad6520b6) |
+| 11368697 | peer A | **deploys** `Ping` | [0x7d4cc4f9…](https://sepolia.etherscan.io/tx/0x7d4cc4f9829d5c8806ab72b7bb4f8ef34b7d37fdb51c73bb222bea05505b5c0e) |
+| 11368699 | peer A | unwrap 0.0002 WETH | [0xcd4316c9…](https://sepolia.etherscan.io/tx/0xcd4316c9644c4068747be5f91b0abf10560d6e61ccb219a3b17429eb584ace1d) |
 
 Sepolia WETH `0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9`, USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`.
 
-**Date:** 2026-07-27 · agent-wallet **0.4.2** · noob **0.5.1** · model **Qwen3.6-35B-A3B Q8_0** local.
+### The Solidity side
+
+From `"make a contract that has a ping function, deploy it on sepolia"` and nothing else, the local 35B loaded the workflow skill off its description, mirrored the 14 steps into its own todo list, and walked them in order. Unprompted, it produced custom errors, two-step ownership, an indexed event, NatSpec, and an attacker contract for the reentrancy proof. Along the way:
+
+- The compile gate caught a real mistake (`indexed` on a custom error, which Solidity rejects) and the agent fixed it.
+- The sandbox ran 17 steps with 5 access-control negatives all reverting `OwnableNotOwner()`, 3 invariants holding, zero compiler warnings, 899 bytes of runtime code.
+- The artifact gate fired for real: the agent tried to reach the audit without saving `sandbox.json`, got `WALK_BLOCKED`, and complied.
+- The audit gate passed all ten dimensions after re-reading the source cold.
+- The walk survived a context compaction at 75% of the 64K window without losing its place.
+
+Deployed contracts were checked independently rather than taken from the agent's report: runtime bytecode recompiled and compared byte for byte (metadata stripped), every ABI selector confirmed present in the deployed code, `owner()` read back, and a live `ping()` write landed.
+
+### What this run cost, honestly
+
+The wallet surface is quick: 20s to create a wallet, 50s to send, 137s to wrap and swap, 48s to unwrap. The whole two-peer wallet and swap sequence was 27 minutes.
+
+The contract walk is not quick. One pass is about 8 minutes of generation on a 35B at 43 t/s, because the steps ask for substantial written artifacts (the spec, threat model and design came out 3 to 5 KB each). Two limits are worth stating rather than hiding:
+
+- noob caps a single input at 50 rounds. The 14-step walk needs more than that on this model, stopping at step 11 twice in a row. The walk resumes across inputs by design, so it is pacing, not failure.
+- Each compaction forces the server to reprocess the whole rewritten context, about 50 seconds at 40K tokens. Thirty-one of those over the session.
+
+Claude Haiku 4.5 ran the same skill against the same CLI and finished four verbs in 115 seconds and two more in 80.
+
+### What the agents found
+
+Four defects, every one surfaced by an agent doing ordinary work, all fixed in 0.5.0:
+
+- `.env` was read only from the exact working directory, and a relative `AGENT_WALLET_HOME` resolved against it, so an empty keystore was quietly created beside the scratch files. The contract walk tells the agent to work in a scratch subdirectory, so the wallet appeared to vanish the moment it did.
+- Agents inlined `AGENT_WALLET_PASSPHRASE=...` on every command, putting the secret in transcripts and shell history. After the skill was changed to forbid it, a rerun showed zero occurrences.
+- `contract-step --mode <mode>` wiped the work directory, which is exactly the command an agent reaches for to continue an interrupted walk. It now resumes at the first unsaved step.
+- `wallet-import` only accepted `--mnemonic "twelve words"`, so a seed phrase necessarily entered shell history. There is now `--mnemonic-file` and `--mnemonic -`.
+
+One weakness is not fixed and is worth knowing: asked to unwrap without naming a chain, the model assumed mainnet, read a zero balance there and reported the wallet empty. It stopped and asked rather than acting, and the gate refuses unauthorized writes regardless, but the instruction to ask which network first did not carry.
+
+**Out of scope for this run:** Bitcoin spends (read-only), mainnet, explorer source verification.
+
+**Date:** 2026-07-28 · agent-wallet **0.5.0** · noob **0.5.1** · **Qwen3.6-35B-A3B Q8_0** local and **Claude Haiku 4.5**.

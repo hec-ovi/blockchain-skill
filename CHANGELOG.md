@@ -7,6 +7,10 @@
 - New `layers/workflow`: the step machine and its prompts, inlined into the bundle at build time (`npm run prompts`).
 - `contracts`: multi-file compile with relative import resolution and solc warnings surfaced.
 - Audit step scores ten dimensions against the EEA EthTrust Security Levels and the OWASP Smart Contract Top 10 (2026).
+- `wallet-import` takes `--mnemonic-file <path>` or `--mnemonic -` (stdin), so a seed phrase no longer has to enter shell history.
+- Fixed: `.env` is found by walking up from the working directory, and a relative `AGENT_WALLET_HOME` resolves against the project root. Running a verb from a subdirectory used to lose the wallet.
+- Fixed: `contract-step --mode <mode>` resumes an in-progress walk instead of wiping it; only `--reset` discards work.
+- Benchmarked: two agent peers on Sepolia, all 25 verbs measured, wallet through to a deployed contract called by the other peer.
 
 ## 0.4.2
 

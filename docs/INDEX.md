@@ -24,6 +24,6 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Wallet skill (fat SKILL.md and its copies) | `SKILL.md` (canonical), `skills/`, `plugins/` |
 | Solidity workflow skill | `skills/agent-solidity/SKILL.md` (canonical), copies under `plugins/` |
 | Packaging, manifests, install routes | repo root + `.claude-plugin/` + `.agents/` + `plugins/` |
-| Live dual-agent noob benchmark (Sepolia, local Qwen3.6-35B Q8) | README footer: "Agent benchmark" |
+| Live two-peer agent benchmark (Sepolia, local 35B + Haiku) | README footer: "Agent benchmark" |
 
 Build status: all layers shipped and tested. This table is the contract for where things live; update it the moment a layer lands or moves.
