@@ -12,7 +12,7 @@ These are not style preferences. Each one maps to a class of real loss.
 2. **Checks, effects, interactions**, in that order, in every function. State is written before any external call, any native transfer, any token hook. When you cannot, add the reentrancy guard and say why in a comment.
 3. **Custom errors**, not revert strings: `error NotOwner();` then `if (msg.sender != owner) revert NotOwner();`. Give each error the parameters a caller needs to understand the failure.
 4. **An event for every state change**, carrying enough to reconstruct the new state from logs alone. Index the fields people filter on, at most three.
-5. **Explicit visibility and mutability** on every function and state variable. Mark `view` and `pure` honestly; the sandbox uses them to decide whether a step is a read or a transaction.
+5. **Explicit visibility and mutability** on every function and state variable. Mark `view` and `pure` accurately; the sandbox uses them to decide whether a step is a read or a transaction.
 6. **Validate every input.** Reject the zero address where an address is required, reject zero amounts where zero is meaningless, reject values above their bound. Do it at the top, with a custom error.
 7. **`immutable` and `constant`** for anything that never changes after deployment.
 8. **Handle the return of every external call.** `(bool ok, ) = to.call{value: v}(""); if (!ok) revert SendFailed();` Never leave a low-level call's bool unread. For ERC-20, treat a missing return value as success and a `false` return as failure, both.
