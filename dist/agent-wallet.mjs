@@ -49,6 +49,48 @@ var __toESM = (mod6, isNodeMode, target) => (target = mod6 != null ? __create(__
   mod6
 ));
 
+// layers/core/src/dotenv.ts
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+function dotenvDir() {
+  return loadedFrom ?? process.cwd();
+}
+function loadDotenv(dir = process.cwd()) {
+  let current = resolve(dir);
+  for (; ; ) {
+    let raw;
+    try {
+      raw = readFileSync(join(current, ".env"), "utf8");
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return;
+      current = parent;
+      continue;
+    }
+    loadedFrom = current;
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      if (key in process.env) continue;
+      let value = trimmed.slice(eq + 1).trim();
+      if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+    return;
+  }
+}
+var loadedFrom;
+var init_dotenv = __esm({
+  "layers/core/src/dotenv.ts"() {
+    "use strict";
+  }
+});
+
 // node_modules/@noble/hashes/utils.js
 function isBytes(a) {
   return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
@@ -21353,16 +21395,18 @@ var init_envelope = __esm({
 
 // layers/core/src/home.ts
 import { homedir } from "node:os";
-import { join as join3 } from "node:path";
+import { isAbsolute, resolve as resolve2 } from "node:path";
 import { mkdirSync } from "node:fs";
 function walletHome() {
-  const dir = process.env["AGENT_WALLET_HOME"] ?? join3(homedir(), ".agent-wallet");
+  const override = process.env["AGENT_WALLET_HOME"];
+  const dir = override === void 0 || override === "" ? resolve2(homedir(), ".agent-wallet") : isAbsolute(override) ? override : resolve2(dotenvDir(), override);
   mkdirSync(dir, { recursive: true, mode: 448 });
   return dir;
 }
 var init_home = __esm({
   "layers/core/src/home.ts"() {
     "use strict";
+    init_dotenv();
   }
 });
 
@@ -26267,7 +26311,7 @@ function alphabet2(letters) {
   };
 }
 // @__NO_SIDE_EFFECTS__
-function join4(separator = "") {
+function join3(separator = "") {
   astr2("join", separator);
   return {
     encode: (from21) => {
@@ -26373,7 +26417,7 @@ function checksum2(len, fn) {
 var genBase582, base582, createBase58check2;
 var init_esm = __esm({
   "node_modules/viem/node_modules/@scure/base/lib/esm/index.js"() {
-    genBase582 = /* @__NO_SIDE_EFFECTS__ */ (abc) => /* @__PURE__ */ chain2(/* @__PURE__ */ radix3(58), /* @__PURE__ */ alphabet2(abc), /* @__PURE__ */ join4(""));
+    genBase582 = /* @__NO_SIDE_EFFECTS__ */ (abc) => /* @__PURE__ */ chain2(/* @__PURE__ */ radix3(58), /* @__PURE__ */ alphabet2(abc), /* @__PURE__ */ join3(""));
     base582 = /* @__PURE__ */ genBase582("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz");
     createBase58check2 = (sha25610) => /* @__PURE__ */ chain2(checksum2(4, (data) => sha25610(sha25610(data))), base582);
   }
@@ -34246,7 +34290,7 @@ __export(wallet_exports, {
   listWallets: () => listWallets,
   unlockMnemonic: () => unlockMnemonic
 });
-import { join as join5 } from "node:path";
+import { join as join4 } from "node:path";
 import { mkdirSync as mkdirSync2, readFileSync as readFileSync2, readdirSync, writeFileSync, existsSync } from "node:fs";
 function envScrypt() {
   const n = Number(process.env["AGENT_WALLET_SCRYPT_N"] ?? "");
@@ -34254,7 +34298,7 @@ function envScrypt() {
   return { n, p: 1, r: 8 };
 }
 function keystoreDir() {
-  const dir = join5(walletHome(), "keystore");
+  const dir = join4(walletHome(), "keystore");
   mkdirSync2(dir, { recursive: true, mode: 448 });
   return dir;
 }
@@ -34262,7 +34306,7 @@ function fileFor(name) {
   if (!NAME_RE.test(name)) {
     throw new CodedError("WALLET_NAME_INVALID", `"${name}" must match ${NAME_RE}`, "Use lowercase letters, digits and hyphens, e.g. main or trading-bot");
   }
-  return join5(keystoreDir(), `${name}.json`);
+  return join4(keystoreDir(), `${name}.json`);
 }
 function readKeystore(name) {
   const file2 = fileFor(name);
@@ -34320,7 +34364,7 @@ function listWallets() {
     () => readdirSync(keystoreDir()).filter((f) => f.endsWith(".json")).sort().map((f) => {
       const name = f.slice(0, -5);
       const store = readKeystore(name);
-      return { name, file: join5(keystoreDir(), f), createdAt: store.xAgentWallet?.createdAt ?? "unknown" };
+      return { name, file: join4(keystoreDir(), f), createdAt: store.xAgentWallet?.createdAt ?? "unknown" };
     })
   );
 }
@@ -34384,7 +34428,7 @@ function exportWallet(q) {
       };
     }
     if (q.outFile) {
-      const abs = q.outFile.startsWith("/") ? q.outFile : join5(process.cwd(), q.outFile);
+      const abs = q.outFile.startsWith("/") ? q.outFile : join4(process.cwd(), q.outFile);
       writeFileSync(abs, `${JSON.stringify(payload, null, 2)}
 `, { mode: 384 });
       return {
@@ -38790,13 +38834,13 @@ var init_decodeFunctionResult = __esm({
 
 // node_modules/viem/_esm/utils/promise/withResolvers.js
 function withResolvers() {
-  let resolve5 = () => void 0;
+  let resolve7 = () => void 0;
   let reject = () => void 0;
   const promise2 = new Promise((resolve_, reject_) => {
-    resolve5 = resolve_;
+    resolve7 = resolve_;
     reject = reject_;
   });
-  return { promise: promise2, resolve: resolve5, reject };
+  return { promise: promise2, resolve: resolve7, reject };
 }
 var init_withResolvers = __esm({
   "node_modules/viem/_esm/utils/promise/withResolvers.js"() {
@@ -38815,8 +38859,8 @@ function createBatchScheduler({ fn, id, shouldSplitBatch, wait: wait2 = 0, sort 
       if (sort && Array.isArray(data))
         data.sort(sort);
       for (let i = 0; i < scheduler.length; i++) {
-        const { resolve: resolve5 } = scheduler[i];
-        resolve5?.([data[i], data]);
+        const { resolve: resolve7 } = scheduler[i];
+        resolve7?.([data[i], data]);
       }
     }).catch((err) => {
       for (let i = 0; i < scheduler.length; i++) {
@@ -38832,16 +38876,16 @@ function createBatchScheduler({ fn, id, shouldSplitBatch, wait: wait2 = 0, sort 
   return {
     flush,
     async schedule(args) {
-      const { promise: promise2, resolve: resolve5, reject } = withResolvers();
+      const { promise: promise2, resolve: resolve7, reject } = withResolvers();
       const split5 = shouldSplitBatch?.([...getBatchedArgs(), args]);
       if (split5)
         exec();
       const hasActiveScheduler = getScheduler().length > 0;
       if (hasActiveScheduler) {
-        setScheduler({ args, resolve: resolve5, reject });
+        setScheduler({ args, resolve: resolve7, reject });
         return promise2;
       }
-      setScheduler({ args, resolve: resolve5, reject });
+      setScheduler({ args, resolve: resolve7, reject });
       setTimeout(exec, wait2);
       return promise2;
     }
@@ -40336,30 +40380,8 @@ var require_src = __commonJS({
   }
 });
 
-// layers/core/src/dotenv.ts
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-function loadDotenv(dir = process.cwd()) {
-  let raw;
-  try {
-    raw = readFileSync(join(dir, ".env"), "utf8");
-  } catch {
-    return;
-  }
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq <= 0) continue;
-    const key = trimmed.slice(0, eq).trim();
-    if (key in process.env) continue;
-    let value = trimmed.slice(eq + 1).trim();
-    if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-      value = value.slice(1, -1);
-    }
-    process.env[key] = value;
-  }
-}
+// bin/entry.ts
+init_dotenv();
 
 // layers/agentio/src/cli.ts
 init_wallet();
@@ -40368,7 +40390,7 @@ init_wallet();
 init_envelope();
 
 // layers/chains/src/registry.ts
-import { join as join6 } from "node:path";
+import { join as join5 } from "node:path";
 import { mkdirSync as mkdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync2 } from "node:fs";
 
 // node_modules/viem/_esm/chains/index.js
@@ -62502,7 +62524,7 @@ var VerificationError = class extends BaseError3 {
 // node_modules/ox/_esm/tempo/TempoAddress.js
 init_Errors();
 init_Hex();
-function resolve(address2) {
+function resolve3(address2) {
   if (address2.startsWith("tempo"))
     return parse3(address2).address;
   return address2;
@@ -62533,7 +62555,7 @@ function from10(authorization, options = {}) {
     return fromRpc3(authorization);
   const resolved = {
     ...authorization,
-    address: resolve(authorization.address)
+    address: resolve3(authorization.address)
   };
   if (options.signature) {
     return { ...resolved, signature: options.signature };
@@ -63215,7 +63237,7 @@ init_Hex();
 var tip20Prefix = "0x20c0";
 function toAddress(tokenId) {
   if (typeof tokenId === "string") {
-    const resolved = resolve(tokenId);
+    const resolved = resolve3(tokenId);
     assert5(resolved);
     return resolved;
   }
@@ -63522,20 +63544,20 @@ function from13(authorization, options = {}) {
     assertSignature(auth.signature);
   const resolved = {
     ...auth,
-    address: resolve(auth.address),
+    address: resolve3(auth.address),
     ...auth.limits ? {
       limits: auth.limits.map((l) => ({
         ...l,
-        token: resolve(l.token)
+        token: resolve3(l.token)
       }))
     } : {},
     ...auth.scopes ? {
       scopes: auth.scopes.map((scope) => ({
         ...scope,
-        address: resolve(scope.address),
+        address: resolve3(scope.address),
         selector: resolveSelector(scope.selector),
         ...scope.recipients ? {
-          recipients: scope.recipients.map((r) => resolve(r))
+          recipients: scope.recipients.map((r) => resolve3(r))
         } : {}
       }))
     } : {}
@@ -63697,7 +63719,7 @@ function toRpc4(authorization) {
   return {
     chainId: chainId === 0n ? "0x" : fromNumber(chainId),
     expiry: typeof expiry === "number" ? fromNumber(expiry) : null,
-    keyId: resolve(address2),
+    keyId: resolve3(address2),
     keyType: type2,
     limits: limits?.map(({ token, limit, period }) => ({
       token,
@@ -64209,14 +64231,14 @@ function toRpc9(request) {
     request_rpc.authorizationList = toRpcList(request.authorizationList);
   if (request.calls)
     request_rpc.calls = request.calls.map((call3) => ({
-      to: call3.to ? resolve(call3.to) : call3.to,
+      to: call3.to ? resolve3(call3.to) : call3.to,
       value: call3.value ? fromNumber(call3.value) : "0x",
       data: call3.data ?? "0x"
     }));
   else if (request.to || request.data || request.value)
     request_rpc.calls = [
       {
-        to: request.to ? resolve(request.to) : void 0,
+        to: request.to ? resolve3(request.to) : void 0,
         value: request.value ? fromNumber(request.value) : "0x",
         data: request.data ?? "0x"
       }
@@ -64528,11 +64550,11 @@ function from16(envelope, options = {}) {
   const { feePayerSignature, signature } = options;
   const envelope_ = typeof envelope === "string" ? deserialize3(envelope) : envelope;
   if (envelope_.from)
-    envelope_.from = resolve(envelope_.from);
+    envelope_.from = resolve3(envelope_.from);
   if (envelope_.calls)
     envelope_.calls = envelope_.calls.map((call3) => ({
       ...call3,
-      ...call3.to ? { to: resolve(call3.to) } : {}
+      ...call3.to ? { to: resolve3(call3.to) } : {}
     }));
   assert9(envelope_);
   return {
@@ -64549,7 +64571,7 @@ function serialize3(envelope, options = {}) {
   const signature = options.signature || envelope.signature;
   const authorizationTupleList = toTupleList(authorizationList);
   const callsTupleList = calls.map((call3) => [
-    call3.to ? resolve(call3.to) : "0x",
+    call3.to ? resolve3(call3.to) : "0x",
     call3.value ? fromNumber(call3.value) : "0x",
     call3.data ?? "0x"
   ]);
@@ -64609,7 +64631,7 @@ function encodeForSigning(envelope) {
 function getSignPayload5(envelope, options = {}) {
   const sigHash = hash5(envelope, { presign: true });
   if (options.from)
-    return keccak2563(concat3("0x04", sigHash, resolve(options.from)));
+    return keccak2563(concat3("0x04", sigHash, resolve3(options.from)));
   return sigHash;
 }
 function hash5(envelope, options = {}) {
@@ -64617,7 +64639,7 @@ function hash5(envelope, options = {}) {
   return keccak2563(serialized);
 }
 function getFeePayerSignPayload(envelope, options) {
-  const sender = resolve(options.sender);
+  const sender = resolve3(options.sender);
   const serialized = serialize3({ ...envelope, signature: void 0 }, {
     sender,
     format: "feePayer"
@@ -65423,7 +65445,7 @@ function observe(observerId, callbacks, fn) {
 // node_modules/viem/_esm/utils/wait.js
 init_utils11();
 async function wait(time3, { signal } = {}) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve7, reject) => {
     if (signal?.aborted) {
       reject(getAbortError(signal));
       return;
@@ -65431,7 +65453,7 @@ async function wait(time3, { signal } = {}) {
     const cleanup = () => signal?.removeEventListener("abort", onAbort);
     const timeout = setTimeout(() => {
       cleanup();
-      resolve5();
+      resolve7();
     }, time3);
     const onAbort = () => {
       clearTimeout(timeout);
@@ -66792,7 +66814,7 @@ init_withResolvers();
 // node_modules/viem/_esm/utils/promise/withRetry.js
 init_utils11();
 function withRetry(fn, { delay: delay_ = 100, retryCount = 2, shouldRetry: shouldRetry2 = () => true, signal } = {}) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve7, reject) => {
     const attemptRetry = async ({ count = 0 } = {}) => {
       if (signal?.aborted) {
         reject(getAbortError(signal));
@@ -66812,7 +66834,7 @@ function withRetry(fn, { delay: delay_ = 100, retryCount = 2, shouldRetry: shoul
       };
       try {
         const data = await fn();
-        resolve5(data);
+        resolve7(data);
       } catch (err) {
         if (signal?.aborted) {
           reject(getAbortError(signal));
@@ -67007,13 +67029,13 @@ async function waitForTransactionReceipt(client, parameters) {
   let retrying = false;
   let _unobserve;
   let _unwatch;
-  const { promise: promise2, resolve: resolve5, reject } = withResolvers();
+  const { promise: promise2, resolve: resolve7, reject } = withResolvers();
   const timer = timeout ? setTimeout(() => {
     _unwatch?.();
     _unobserve?.();
     reject(new WaitForTransactionReceiptTimeoutError({ hash: hash7 }));
   }, timeout) : void 0;
-  _unobserve = observe(observerId, { onReplaced, resolve: resolve5, reject }, async (emit2) => {
+  _unobserve = observe(observerId, { onReplaced, resolve: resolve7, reject }, async (emit2) => {
     receipt = await getAction(client, getTransactionReceipt, "getTransactionReceipt")({ hash: hash7 }).catch(() => void 0);
     if (receipt && confirmations <= 1) {
       clearTimeout(timer);
@@ -70594,7 +70616,7 @@ init_utils11();
 // node_modules/viem/_esm/utils/promise/withTimeout.js
 init_utils11();
 function withTimeout(fn, { errorInstance = new Error("timed out"), timeout, signal }) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve7, reject) => {
     ;
     (async () => {
       let timeoutId;
@@ -70609,7 +70631,7 @@ function withTimeout(fn, { errorInstance = new Error("timed out"), timeout, sign
             }
           }, timeout);
         }
-        resolve5(await fn({ signal: controller?.signal || null }));
+        resolve7(await fn({ signal: controller?.signal || null }));
       } catch (err) {
         if (controller?.signal.aborted && isAbortError(err)) {
           reject(errorInstance);
@@ -74013,9 +74035,9 @@ function fromViem(c) {
 var REGISTRY_URL = "https://chainid.network/chains.json";
 var CACHE_TTL_MS = 7 * 24 * 3600 * 1e3;
 function cacheFile() {
-  const dir = join6(walletHome(), "cache");
+  const dir = join5(walletHome(), "cache");
   mkdirSync3(dir, { recursive: true, mode: 448 });
-  return join6(dir, "chains.json");
+  return join5(dir, "chains.json");
 }
 async function loadRegistry(fetchFn) {
   try {
@@ -74520,13 +74542,13 @@ async function isImageUri(uri) {
     }
     if (!Object.hasOwn(globalThis, "Image"))
       return false;
-    return new Promise((resolve5) => {
+    return new Promise((resolve7) => {
       const img = new Image();
       img.onload = () => {
-        resolve5(true);
+        resolve7(true);
       };
       img.onerror = () => {
-        resolve5(false);
+        resolve7(false);
       };
       img.src = uri;
     });
@@ -77113,11 +77135,11 @@ init_envelope();
 
 // layers/core/src/config.ts
 init_home();
-import { join as join7 } from "node:path";
+import { join as join6 } from "node:path";
 import { readFileSync as readFileSync4, writeFileSync as writeFileSync3 } from "node:fs";
 function loadConfig() {
   try {
-    return JSON.parse(readFileSync4(join7(walletHome(), "config.json"), "utf8"));
+    return JSON.parse(readFileSync4(join6(walletHome(), "config.json"), "utf8"));
   } catch {
     return {};
   }
@@ -81354,18 +81376,18 @@ init_envelope();
 init_envelope();
 import { createRequire } from "node:module";
 import { existsSync as existsSync2 } from "node:fs";
-import { dirname, join as join8 } from "node:path";
+import { dirname as dirname2, join as join7 } from "node:path";
 import { fileURLToPath } from "node:url";
 function loadSolc() {
-  const here = dirname(fileURLToPath(import.meta.url));
+  const here = dirname2(fileURLToPath(import.meta.url));
   const candidates = [
-    join8(here, "vendor", "node_modules", "solc"),
-    join8(here, "..", "node_modules", "solc"),
-    join8(here, "..", "..", "node_modules", "solc"),
-    join8(process.cwd(), "node_modules", "solc")
+    join7(here, "vendor", "node_modules", "solc"),
+    join7(here, "..", "node_modules", "solc"),
+    join7(here, "..", "..", "node_modules", "solc"),
+    join7(process.cwd(), "node_modules", "solc")
   ];
   for (const solcDir of candidates) {
-    const entry = join8(solcDir, "index.js");
+    const entry = join7(solcDir, "index.js");
     if (!existsSync2(entry)) continue;
     try {
       return createRequire(entry)(solcDir);
@@ -81634,22 +81656,22 @@ init_envelope();
 
 // layers/core/src/state.ts
 init_home();
-import { join as join9 } from "node:path";
+import { join as join8 } from "node:path";
 import { mkdirSync as mkdirSync4, readFileSync as readFileSync5, readdirSync as readdirSync2, renameSync, rmSync, writeFileSync as writeFileSync4 } from "node:fs";
 import { randomUUID as randomUUID3 } from "node:crypto";
 var NAME_RE2 = /^[a-z0-9][a-z0-9-]*$/;
 function stateDir() {
-  const dir = join9(walletHome(), "state");
+  const dir = join8(walletHome(), "state");
   mkdirSync4(dir, { recursive: true, mode: 448 });
   return dir;
 }
 function pathFor(name) {
   if (!NAME_RE2.test(name)) throw new Error(`STATE_NAME_INVALID: "${name}" must match ${NAME_RE2}`);
-  return join9(stateDir(), `${name}.json`);
+  return join8(stateDir(), `${name}.json`);
 }
 function saveState(name, value) {
   const target = pathFor(name);
-  const tmp = join9(stateDir(), `.${name}.${randomUUID3()}.tmp`);
+  const tmp = join8(stateDir(), `.${name}.${randomUUID3()}.tmp`);
   writeFileSync4(tmp, `${JSON.stringify(value, null, 2)}
 `, { mode: 384 });
   renameSync(tmp, target);
@@ -82292,7 +82314,7 @@ init_envelope();
 
 // layers/sandbox/src/run.ts
 import { readFileSync as readFileSync6 } from "node:fs";
-import { resolve as resolve2 } from "node:path";
+import { resolve as resolve4 } from "node:path";
 init_envelope();
 
 // node_modules/@ethereumjs/common/dist/esm/chains.js
@@ -87884,8 +87906,8 @@ var WalkController = class _WalkController {
     await controller._startWalk(rootHash);
   }
   async _startWalk(rootHash) {
-    return new Promise((resolve5, reject) => {
-      this._resolvePromise = resolve5;
+    return new Promise((resolve7, reject) => {
+      this._resolvePromise = resolve7;
       this._rejectPromise = reject;
       this.trie.lookupNode(rootHash).then((rootNode) => {
         this._processNode(rootHash, rootNode, []);
@@ -102860,8 +102882,8 @@ var EVM = class _EVM {
       const listeners = this.events.listeners(topic);
       for (const listener of listeners) {
         if (listener.length === 2) {
-          await new Promise((resolve5) => {
-            listener(data, resolve5);
+          await new Promise((resolve7) => {
+            listener(data, resolve7);
           });
         } else {
           listener(data);
@@ -104345,14 +104367,14 @@ var MerkleStateManager = class _MerkleStateManager {
    * @param modifyTrie - Function to modify the storage trie of the account
    */
   async _modifyContractStorage(address2, account, modifyTrie) {
-    return new Promise(async (resolve5) => {
+    return new Promise(async (resolve7) => {
       const storageTrie = this._getStorageTrie(address2, account);
       modifyTrie(storageTrie, async () => {
         const addressHex = bytesToUnprefixedHex(address2.bytes);
         this._storageTries[addressHex] = storageTrie;
         account.storageRoot = storageTrie.root();
         await this.putAccount(address2, account);
-        resolve5();
+        resolve7();
       });
     });
   }
@@ -105073,8 +105095,8 @@ var VM = class {
       const listeners = this.events.listeners(topic);
       for (const listener of listeners) {
         if (listener.length === 2) {
-          await new Promise((resolve5) => {
-            listener(data, resolve5);
+          await new Promise((resolve7) => {
+            listener(data, resolve7);
           });
         } else {
           listener(data);
@@ -106233,7 +106255,7 @@ function readSources(plan, baseDir) {
       out[s.path] = s.content;
       continue;
     }
-    const file2 = resolve2(baseDir, s.file);
+    const file2 = resolve4(baseDir, s.file);
     try {
       out[s.path] = readFileSync6(file2, "utf8");
     } catch {
@@ -106440,7 +106462,7 @@ init_envelope();
 // layers/workflow/src/walk.ts
 init_envelope();
 import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as readFileSync7, rmSync as rmSync2, writeFileSync as writeFileSync5 } from "node:fs";
-import { isAbsolute, join as join10, resolve as resolve3 } from "node:path";
+import { isAbsolute as isAbsolute2, join as join9, resolve as resolve5 } from "node:path";
 
 // layers/workflow/src/prompts.generated.ts
 var MANIFEST = {
@@ -106538,11 +106560,11 @@ var ENTRY_STEP = "00-mode";
 var MAX_VISITS = 6;
 function workDir() {
   const override = process.env["AGENT_CONTRACT_WORK"]?.trim();
-  if (override) return isAbsolute(override) ? override : resolve3(process.cwd(), override);
-  return resolve3(process.cwd(), ".contract-work");
+  if (override) return isAbsolute2(override) ? override : resolve5(process.cwd(), override);
+  return resolve5(process.cwd(), ".contract-work");
 }
 function statePath(dir) {
-  return join10(dir, "walk.json");
+  return join9(dir, "walk.json");
 }
 function readState(dir) {
   try {
@@ -106579,7 +106601,7 @@ function promptBody(step3) {
 }
 function artifactFor(step3, dir) {
   const name = MANIFEST.produces[step3];
-  return name === void 0 ? void 0 : join10(dir, name);
+  return name === void 0 ? void 0 : join9(dir, name);
 }
 function assertNotBlocked(step3, seq, dir) {
   const upto = seq.indexOf(step3);
@@ -106717,7 +106739,7 @@ init_envelope();
 init_home();
 init_wallet();
 import { existsSync as existsSync4, mkdirSync as mkdirSync6, readFileSync as readFileSync8 } from "node:fs";
-import { join as join11 } from "node:path";
+import { join as join10 } from "node:path";
 var LAYER10 = { layer: "agentio", backend: "init" };
 function toolkitVersion() {
   const bundled = "0.5.0";
@@ -106738,7 +106760,7 @@ function nodeMeetsFloor(version5) {
 }
 function ensureHomeLayout(home) {
   for (const sub of ["keystore", "state", "cache"]) {
-    mkdirSync6(join11(home, sub), { recursive: true, mode: 448 });
+    mkdirSync6(join10(home, sub), { recursive: true, mode: 448 });
   }
 }
 function initToolkit() {
@@ -106816,7 +106838,7 @@ function initToolkit() {
 
 // layers/agentio/src/cli.ts
 import { readFileSync as readFileSync9 } from "node:fs";
-import { dirname as dirname2, resolve as resolve4 } from "node:path";
+import { dirname as dirname3, resolve as resolve6 } from "node:path";
 function parseFlags(args) {
   const flags = {};
   const rest = [];
@@ -107184,7 +107206,7 @@ var verbs = {
           error: { code: "PLAN_MISSING", message: "no plan given", hint: "Pass --plan <file.json>. See layers/sandbox/CONTRACT.md for the shape." }
         });
       }
-      const file2 = resolve4(process.cwd(), planPath);
+      const file2 = resolve6(process.cwd(), planPath);
       let plan;
       try {
         plan = JSON.parse(readFileSync9(file2, "utf8"));
@@ -107194,7 +107216,7 @@ var verbs = {
           error: { code: "PLAN_UNREADABLE", message: `cannot read ${file2}`, hint: String(e instanceof Error ? e.message : e) }
         });
       }
-      return emit(await sandboxRun(plan, { baseDir: dirname2(file2) }));
+      return emit(await sandboxRun(plan, { baseDir: dirname3(file2) }));
     }
   },
   "contract-step": {
