@@ -106884,6 +106884,34 @@ function passphraseFrom(flags) {
   }
   return pass;
 }
+function mnemonicFrom(flags) {
+  const file2 = flags["mnemonic-file"];
+  if (file2 !== void 0 && file2 !== "true") {
+    const raw = readFileSync9(file2, "utf8").trim();
+    if (raw.startsWith("{")) {
+      const parsed = JSON.parse(raw);
+      const found = parsed.mnemonic ?? parsed.data?.mnemonic;
+      if (!found) {
+        console.error(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "MNEMONIC_MISSING",
+              message: `no mnemonic field in ${file2}`,
+              hint: "Export with --include-mnemonic, or pass the words with --mnemonic-file pointing at a plain text file"
+            }
+          })
+        );
+        process.exit(2);
+      }
+      return found;
+    }
+    return raw;
+  }
+  const inline = flags["mnemonic"] ?? "";
+  if (inline === "-") return readFileSync9(0, "utf8").trim();
+  return inline;
+}
 function emit(envelope) {
   console.log(JSON.stringify(envelope, null, 2));
   return envelope.ok ? 0 : 1;
@@ -106909,14 +106937,14 @@ var verbs = {
     }
   },
   "wallet-import": {
-    summary: "Import a wallet from an existing mnemonic",
+    summary: 'wallet-import --name main (--mnemonic-file <path> | --mnemonic "..." | - for stdin)',
     run: async (args) => {
       const { flags } = parseFlags(args);
       return emit(
         await importWallet({
           name: flags["name"] ?? "main",
           passphrase: passphraseFrom(flags),
-          mnemonic: flags["mnemonic"] ?? ""
+          mnemonic: mnemonicFrom(flags)
         })
       );
     }

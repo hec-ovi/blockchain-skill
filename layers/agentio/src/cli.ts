@@ -53,6 +53,41 @@ function passphraseFrom(flags: Record<string, string>): string {
   return pass;
 }
 
+/**
+ * A mnemonic without putting it in shell history. `--mnemonic-file <path>`
+ * reads it from disk (the shape `wallet-export --out` writes), `--mnemonic -`
+ * reads stdin, and the literal `--mnemonic "..."` still works for the cases
+ * where a human is pasting one interactively.
+ */
+function mnemonicFrom(flags: Record<string, string>): string {
+  const file = flags["mnemonic-file"];
+  if (file !== undefined && file !== "true") {
+    const raw = readFileSync(file, "utf8").trim();
+    if (raw.startsWith("{")) {
+      const parsed = JSON.parse(raw) as { mnemonic?: string; data?: { mnemonic?: string } };
+      const found = parsed.mnemonic ?? parsed.data?.mnemonic;
+      if (!found) {
+        console.error(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "MNEMONIC_MISSING",
+              message: `no mnemonic field in ${file}`,
+              hint: "Export with --include-mnemonic, or pass the words with --mnemonic-file pointing at a plain text file",
+            },
+          }),
+        );
+        process.exit(2);
+      }
+      return found;
+    }
+    return raw;
+  }
+  const inline = flags["mnemonic"] ?? "";
+  if (inline === "-") return readFileSync(0, "utf8").trim();
+  return inline;
+}
+
 function emit(envelope: { ok: boolean }): number {
   console.log(JSON.stringify(envelope, null, 2));
   return envelope.ok ? 0 : 1;
@@ -79,14 +114,14 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
     },
   },
   "wallet-import": {
-    summary: "Import a wallet from an existing mnemonic",
+    summary: "wallet-import --name main (--mnemonic-file <path> | --mnemonic \"...\" | - for stdin)",
     run: async (args) => {
       const { flags } = parseFlags(args);
       return emit(
         await importWallet({
           name: flags["name"] ?? "main",
           passphrase: passphraseFrom(flags),
-          mnemonic: flags["mnemonic"] ?? "",
+          mnemonic: mnemonicFrom(flags),
         }),
       );
     },

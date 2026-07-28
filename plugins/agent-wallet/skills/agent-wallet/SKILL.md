@@ -67,7 +67,7 @@ Examples use `agent-wallet`; substitute your resolved CLI. Chain = name (`sepoli
 
 ```
 agent-wallet wallet-create --name main
-agent-wallet wallet-import --name main --mnemonic "..."
+agent-wallet wallet-import --name main --mnemonic-file ./backup.json   # or --mnemonic - to read stdin
 agent-wallet wallet-list
 agent-wallet wallet-addresses --name main --family evm
 agent-wallet wallet-addresses --name main --family btc --network signet
@@ -140,6 +140,7 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 - Never re-bootstrap (curl/clone) when `dist/agent-wallet.mjs` is already in the skill pack.
 - Never default to mainnet silently; ask the network first.
 - Never put the passphrase in chat, and never inline it on a command line (`AGENT_WALLET_PASSPHRASE=... agent-wallet ...`): it lands in transcripts and shell history. The CLI loads `.env` from the project root by itself, from any subdirectory. Write it once, then never type it again.
+- Never put a mnemonic on a command line; `wallet-import --mnemonic-file <path>` or `--mnemonic -` keeps it out of shell history. Never echo a mnemonic or private key back to the user unless they asked for it.
 - Never invent a new passphrase after `wallet-create`; one `.env` for the session/workspace.
 - Never brute-force after `PASSPHRASE_WRONG`; never `cat` keystore files to recover secrets.
 - Never `balance` with a wallet name; always an address.
