@@ -25,5 +25,6 @@ The thing you want to touch, mapped to the one folder to open. Read that folder'
 | Solidity workflow skill | `skills/agent-solidity/SKILL.md` (canonical), copies under `plugins/` |
 | Packaging, manifests, install routes | repo root + `.claude-plugin/` + `.agents/` + `plugins/` |
 | Live two-peer agent benchmark (Sepolia, local 35B + Haiku) | README footer: "Agent benchmark" |
+| What is still untested and what to do next | `docs/PENDING.md` |
 
-Build status: all layers shipped and tested. This table is the contract for where things live; update it the moment a layer lands or moves.
+Build status: all layers shipped and unit tested; `docs/PENDING.md` records what an agent has and has not exercised end to end. This table is the contract for where things live; update it the moment a layer lands or moves.
