@@ -18,3 +18,5 @@ dist/*
 *.log
 .wallets/
 keystore/
+# Scratch for a contract-step walk (spec, threat model, sources, sandbox runs).
+.contract-work/

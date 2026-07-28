@@ -5,8 +5,11 @@ import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
 import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
 import { quote as swapQuote, swap as swapExec, unwrap as unwrapExec, wrap as wrapExec } from "../../swap/src/api.ts";
+import { sandboxRun } from "../../sandbox/src/api.ts";
+import { modes as workflowModes, renderStep, status as workflowStatus, step as workflowStep } from "../../workflow/src/api.ts";
 import { initToolkit, toolkitVersion } from "./init.ts";
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 type Handler = (args: string[]) => Promise<number>;
 
@@ -369,6 +372,49 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["wait"] !== undefined && { wait: true }),
         }),
       );
+    },
+  },
+  "sandbox-run": {
+    summary: "sandbox-run --plan <plan.json> [--json]  (deploy and exercise contracts on an in-process EVM; no node, no funds)",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      const planPath = flags["plan"];
+      if (!planPath || planPath === "true") {
+        return emit({
+          ok: false,
+          error: { code: "PLAN_MISSING", message: "no plan given", hint: "Pass --plan <file.json>. See layers/sandbox/CONTRACT.md for the shape." },
+        } as never);
+      }
+      const file = resolve(process.cwd(), planPath);
+      let plan: unknown;
+      try {
+        plan = JSON.parse(readFileSync(file, "utf8"));
+      } catch (e) {
+        return emit({
+          ok: false,
+          error: { code: "PLAN_UNREADABLE", message: `cannot read ${file}`, hint: String(e instanceof Error ? e.message : e) },
+        } as never);
+      }
+      return emit(await sandboxRun(plan, { baseDir: dirname(file) }));
+    },
+  },
+  "contract-step": {
+    summary: "contract-step [--mode build|review|ship] [--step 20-threat] [--reset] [--list] [--status] [--json]  (the Solidity walk, one step at a time)",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      const json = flags["json"] !== undefined;
+      if (flags["list"] !== undefined) return emit(await workflowModes());
+      if (flags["status"] !== undefined) return emit(await workflowStatus());
+
+      const env = await workflowStep({
+        ...(flags["mode"] !== undefined && flags["mode"] !== "true" && { mode: flags["mode"] }),
+        ...(flags["step"] !== undefined && flags["step"] !== "true" && { step: flags["step"] }),
+        ...(flags["reset"] !== undefined && { reset: true }),
+      });
+      if (json || !env.ok || !env.data) return emit(env);
+      // A step is instructions for a model to read, so it prints as plain text.
+      console.log(renderStep(env.data));
+      return 0;
     },
   },
 };
