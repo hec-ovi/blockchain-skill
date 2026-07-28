@@ -30,3 +30,23 @@ describe("compile (solc-js, in-process)", () => {
     expect(env.error?.code).toBe("NO_DEPLOYABLE_CONTRACT");
   });
 });
+
+describe("verify (wired to the CLI, forge-backed)", () => {
+  it("fails closed with FORGE_MISSING or reports the verifier's answer", async () => {
+    const { verify } = await import("../src/api.ts");
+    const env = await verify({
+      chainId: 11155111,
+      address: "0x0000000000000000000000000000000000000001",
+      projectDir: "/nonexistent-project",
+      contractPath: "src/X.sol:X",
+    });
+    // Without forge this is FORGE_MISSING; with forge it runs and reports
+    // verified:false. Either way the layer never throws and never claims true.
+    if (env.ok) {
+      expect(env.data!.verified).toBe(false);
+      expect(env.data!.verifier).toBe("sourcify");
+    } else {
+      expect(["FORGE_MISSING", "VERIFY_FAILED"]).toContain(env.error!.code);
+    }
+  });
+});

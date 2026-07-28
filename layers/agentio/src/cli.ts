@@ -3,7 +3,7 @@ import { chainCheck, chainResolve } from "../../chains/src/api.ts";
 import { balance, fees, txStatus, utxos } from "../../read/src/api.ts";
 import { send } from "../../send/src/api.ts";
 import { learnContract } from "../../learn/src/api.ts";
-import { call as contractCall, compile as contractCompile, deploy as contractDeploy, write as contractWrite } from "../../contracts/src/api.ts";
+import { call as contractCall, compile as contractCompile, deploy as contractDeploy, verify as contractVerify, write as contractWrite } from "../../contracts/src/api.ts";
 import { quote as swapQuote, swap as swapExec, unwrap as unwrapExec, wrap as wrapExec } from "../../swap/src/api.ts";
 import { sandboxRun } from "../../sandbox/src/api.ts";
 import { modes as workflowModes, renderStep, status as workflowStatus, step as workflowStep } from "../../workflow/src/api.ts";
@@ -405,6 +405,24 @@ const verbs: Record<string, { summary: string; run: Handler }> = {
           ...(flags["slippage"] !== undefined && { slippageBps: Number(flags["slippage"]) }),
           ...(flags["rpc"] !== undefined && { rpc: flags["rpc"] }),
           ...(flags["wait"] !== undefined && { wait: true }),
+        }),
+      );
+    },
+  },
+  "contract-verify": {
+    summary: "contract-verify --chain-id <id> --address 0x.. --project-dir <dir> --contract-path src/X.sol:X [--verifier sourcify|blockscout|etherscan] [--verifier-url url] [--api-key key]",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      return emit(
+        await contractVerify({
+          chainId: Number(flags["chain-id"] ?? 0),
+          address: flags["address"] ?? "",
+          projectDir: flags["project-dir"] ?? ".",
+          contractPath: flags["contract-path"] ?? "",
+          ...(flags["verifier"] !== undefined && { verifier: flags["verifier"] as "sourcify" | "blockscout" | "etherscan" }),
+          ...(flags["verifier-url"] !== undefined && { verifierUrl: flags["verifier-url"] }),
+          ...(flags["api-key"] !== undefined && { apiKey: flags["api-key"] }),
+          ...(flags["compiler-version"] !== undefined && { compilerVersion: flags["compiler-version"] }),
         }),
       );
     },

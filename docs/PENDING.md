@@ -4,7 +4,7 @@ State as of 2026-07-28, release v0.5.0. What is proven, what is not, and what to
 
 ## Proven
 
-The wallet and chain surface is done. All 25 CLI verbs were driven by an agent and recorded by a shim over the bundled CLI, so coverage is counted rather than asserted. Eight Sepolia transactions, all confirmed: agent-to-agent payment, wrap, approve, Uniswap swap, contract deploy, cross-agent contract call, unwrap. The README benchmark section carries the matrix.
+The wallet and chain surface is done. 25 of the 26 CLI verbs were driven by an agent and recorded by a shim over the bundled CLI, so coverage is counted rather than asserted. Eight Sepolia transactions, all confirmed: agent-to-agent payment, wrap, approve, Uniswap swap, contract deploy, cross-agent contract call, unwrap. The README benchmark section carries the matrix.
 
 Solidity specifically: the local Qwen3.6-35B compiled and deployed a real contract to Sepolia at `0xece19429032df2f9d36E91B80Ef992C754bEf890` (tx `0x6d82a333`), verified independently against the chain (bytecode recompiled and compared, every ABI selector found in the deployed code, `owner()` read back, live `ping()` write). Claude Haiku 4.5 did the same at `0xc91b4aba57f3f5ce5cc13ec1e08946cb5e5498ca`.
 
@@ -19,6 +19,8 @@ Artifacts an agent has produced: `spec.md`, `threat.md`, `design.md`, `contract.
 Artifacts no agent has ever produced: **`deploy.md`** (step 90) and **`handoff.md`** (step 99). Those two step bodies have been served but never carried out, so their instructions are untested against a real model.
 
 **`review` and `ship` modes have never been run by an agent at all.** Both pass the unit tests that walk their sequences, but no model has followed `10-target`, `30-map`, `65-poc` or `90-report` on a real contract. The review mode is the one that audits someone else's code and writes runnable exploit proofs, so it is the least validated part of the release.
+
+`contract-verify` has never been driven by an agent. It was wired to the CLI during the post-release audit (the layer had implemented it since 0.4.x but nothing exposed it, and the deploy step told agents to run a verb that did not exist). It also needs the `forge` binary, which nothing else in the toolkit does.
 
 ## Known weaknesses, unfixed
 

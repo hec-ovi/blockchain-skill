@@ -2789,7 +2789,7 @@ function ecdsa(Point6, hash7, ecdsaOpts = {}) {
     const sig = drbg(seed, k2sig);
     return sig.toBytes(opts.format);
   }
-  function verify6(signature, message, publicKey, opts = {}) {
+  function verify7(signature, message, publicKey, opts = {}) {
     const { lowS, prehash, format: format3 } = validateSigOpts(opts, defaultSigOpts);
     publicKey = abytes2(publicKey, void 0, "publicKey");
     message = validateMsgAndHash(message, prehash);
@@ -2830,7 +2830,7 @@ function ecdsa(Point6, hash7, ecdsaOpts = {}) {
     lengths,
     Point: Point6,
     sign: sign4,
-    verify: verify6,
+    verify: verify7,
     recoverPublicKey: recoverPublicKey3,
     Signature,
     hash: hash_
@@ -7390,8 +7390,8 @@ var init_regexes = __esm({
     _emoji = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
     ipv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
     ipv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/;
-    mac = (delimiter) => {
-      const escapedDelim = escapeRegex(delimiter ?? ":");
+    mac = (delimiter2) => {
+      const escapedDelim = escapeRegex(delimiter2 ?? ":");
       return new RegExp(`^(?:[0-9A-F]{2}${escapedDelim}){5}[0-9A-F]{2}$|^(?:[0-9a-f]{2}${escapedDelim}){5}[0-9a-f]{2}$`);
     };
     cidrv4 = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/([0-9]|[1-2][0-9]|3[0-2])$/;
@@ -25422,7 +25422,7 @@ function weierstrass2(curveDef) {
     return drbg(seed, k2sig);
   }
   Point6.BASE._setWindowSize(8);
-  function verify6(signature, msgHash, publicKey, opts = defaultVerOpts) {
+  function verify7(signature, msgHash, publicKey, opts = defaultVerOpts) {
     const sg = signature;
     msgHash = ensureBytes2("msgHash", msgHash);
     publicKey = ensureBytes2("publicKey", publicKey);
@@ -25478,7 +25478,7 @@ function weierstrass2(curveDef) {
     getPublicKey,
     getSharedSecret,
     sign: sign4,
-    verify: verify6,
+    verify: verify7,
     ProjectivePoint: Point6,
     Signature,
     utils: utils3
@@ -39941,8 +39941,8 @@ var require_common = __commonJS({
         }
         return debug7;
       }
-      function extend2(namespace, delimiter) {
-        const newDebug = createDebug(this.namespace + (typeof delimiter === "undefined" ? ":" : delimiter) + namespace);
+      function extend2(namespace, delimiter2) {
+        const newDebug = createDebug(this.namespace + (typeof delimiter2 === "undefined" ? ":" : delimiter2) + namespace);
         newDebug.log = this.log;
         return newDebug;
       }
@@ -61075,7 +61075,7 @@ function weierstrass3(curveDef) {
     return drbg(seed, k2sig);
   }
   Point6.BASE._setWindowSize(8);
-  function verify6(signature, msgHash, publicKey, opts = defaultVerOpts) {
+  function verify7(signature, msgHash, publicKey, opts = defaultVerOpts) {
     const sg = signature;
     msgHash = ensureBytes3("msgHash", msgHash);
     publicKey = ensureBytes3("publicKey", publicKey);
@@ -61131,7 +61131,7 @@ function weierstrass3(curveDef) {
     getPublicKey,
     getSharedSecret,
     sign: sign4,
-    verify: verify6,
+    verify: verify7,
     ProjectivePoint: Point6,
     Signature,
     utils: utils3
@@ -78659,7 +78659,7 @@ function weierstrass4(curveDef) {
     return drbg(seed, k2sig);
   }
   Point6.BASE._setWindowSize(8);
-  function verify6(signature, msgHash, publicKey, opts = defaultVerOpts) {
+  function verify7(signature, msgHash, publicKey, opts = defaultVerOpts) {
     const sg = signature;
     msgHash = ensureBytes("msgHash", msgHash);
     publicKey = ensureBytes("publicKey", publicKey);
@@ -78715,7 +78715,7 @@ function weierstrass4(curveDef) {
     getPublicKey,
     getSharedSecret,
     sign: sign4,
-    verify: verify6,
+    verify: verify7,
     ProjectivePoint: Point6,
     Signature,
     utils: utils3
@@ -81634,7 +81634,60 @@ async function writeContract2(req) {
 init_envelope();
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+
+// layers/contracts/src/forge.ts
+import { existsSync as existsSync3 } from "node:fs";
+import { homedir as homedir2 } from "node:os";
+import { join as join8, delimiter } from "node:path";
+function findForge() {
+  for (const dir of (process.env["PATH"] ?? "").split(delimiter)) {
+    if (dir && existsSync3(join8(dir, "forge"))) return join8(dir, "forge");
+  }
+  const foundry2 = join8(homedir2(), ".foundry", "bin", "forge");
+  return existsSync3(foundry2) ? foundry2 : null;
+}
+
+// layers/contracts/src/verify.ts
 var run2 = promisify(execFile);
+async function verifyContract(req) {
+  const forge = findForge();
+  if (!forge) throw new CodedError("FORGE_MISSING", "the forge binary is not installed", "Install Foundry (foundryup) to verify from source");
+  const verifier = req.verifier ?? "sourcify";
+  if (verifier === "etherscan" && !req.apiKey) {
+    throw new CodedError("VERIFY_KEY_REQUIRED", "etherscan verification needs an api key", "Set an apiKey, or use the keyless sourcify/blockscout verifiers");
+  }
+  if (verifier === "blockscout" && !req.verifierUrl) {
+    throw new CodedError("VERIFIER_URL_REQUIRED", "blockscout verification needs the instance api url", "Pass verifierUrl like https://eth.blockscout.com/api");
+  }
+  const args = [
+    "verify-contract",
+    req.address,
+    req.contractPath,
+    "--chain-id",
+    String(req.chainId),
+    "--verifier",
+    verifier,
+    "--watch"
+  ];
+  if (req.verifierUrl) args.push("--verifier-url", req.verifierUrl);
+  if (req.apiKey) args.push("--etherscan-api-key", req.apiKey);
+  if (req.compilerVersion) args.push("--compiler-version", req.compilerVersion);
+  try {
+    const { stdout, stderr } = await run2(forge, args, { cwd: req.projectDir, timeout: 18e4 });
+    const out = `${stdout}
+${stderr}`;
+    const verified = /verified|already verified|successfully verified/i.test(out);
+    return { address: req.address, chainId: req.chainId, verifier, verified, detail: out.trim().slice(-1e3) };
+  } catch (e) {
+    return {
+      address: req.address,
+      chainId: req.chainId,
+      verifier,
+      verified: false,
+      detail: `${e?.stdout ?? ""}${e?.stderr ?? e?.message ?? e}`.slice(-1e3)
+    };
+  }
+}
 
 // layers/contracts/src/api.ts
 var LAYER6 = { layer: "contracts", backend: "forge+viem" };
@@ -81650,28 +81703,31 @@ function call2(req) {
 function write(req) {
   return run({ ...LAYER6, chain: req.chain, backend: "viem" }, () => writeContract2(req));
 }
+function verify6(req) {
+  return run({ ...LAYER6, backend: "forge" }, () => verifyContract(req));
+}
 
 // layers/swap/src/api.ts
 init_envelope();
 
 // layers/core/src/state.ts
 init_home();
-import { join as join8 } from "node:path";
+import { join as join9 } from "node:path";
 import { mkdirSync as mkdirSync4, readFileSync as readFileSync5, readdirSync as readdirSync2, renameSync, rmSync, writeFileSync as writeFileSync4 } from "node:fs";
 import { randomUUID as randomUUID3 } from "node:crypto";
 var NAME_RE2 = /^[a-z0-9][a-z0-9-]*$/;
 function stateDir() {
-  const dir = join8(walletHome(), "state");
+  const dir = join9(walletHome(), "state");
   mkdirSync4(dir, { recursive: true, mode: 448 });
   return dir;
 }
 function pathFor(name) {
   if (!NAME_RE2.test(name)) throw new Error(`STATE_NAME_INVALID: "${name}" must match ${NAME_RE2}`);
-  return join8(stateDir(), `${name}.json`);
+  return join9(stateDir(), `${name}.json`);
 }
 function saveState(name, value) {
   const target = pathFor(name);
-  const tmp = join8(stateDir(), `.${name}.${randomUUID3()}.tmp`);
+  const tmp = join9(stateDir(), `.${name}.${randomUUID3()}.tmp`);
   writeFileSync4(tmp, `${JSON.stringify(value, null, 2)}
 `, { mode: 384 });
   renameSync(tmp, target);
@@ -106461,8 +106517,8 @@ init_envelope();
 
 // layers/workflow/src/walk.ts
 init_envelope();
-import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as readFileSync7, rmSync as rmSync2, writeFileSync as writeFileSync5 } from "node:fs";
-import { isAbsolute as isAbsolute2, join as join9, resolve as resolve5 } from "node:path";
+import { existsSync as existsSync4, mkdirSync as mkdirSync5, readFileSync as readFileSync7, rmSync as rmSync2, writeFileSync as writeFileSync5 } from "node:fs";
+import { isAbsolute as isAbsolute2, join as join10, resolve as resolve5 } from "node:path";
 
 // layers/workflow/src/prompts.generated.ts
 var MANIFEST = {
@@ -106551,7 +106607,7 @@ var PROMPTS = {
   "85-docs": "# Document: what a stranger needs before they trust this\n\nThe people who read this next are a user deciding whether to send money, and a developer integrating against it. Neither has your context. Write `docs.md`.\n\n## 1. NatSpec completeness\n\nGo back into `contract.sol` and make sure it is actually there, not just intended:\n\n- `@title` and `@notice` on the contract, saying what it does in a user's words.\n- `@notice` on every external and public function, describing the effect, not the implementation.\n- `@param` for every argument, `@return` for every return value.\n- `@dev` wherever the reason for something is not obvious from the code.\n- A `@notice` on every custom error explaining when a caller sees it.\n\nIf you change the source here, re-run compile and sandbox before advancing. Comments cannot break a contract, but edits made while editing comments can.\n\n## 2. The integration surface\n\nA table of every external and public function: signature, who may call it, what it changes, what it returns, which events it emits, and which errors it can revert with. This is what someone builds against.\n\nThen the events: name, indexed fields, and what a listener should conclude when it fires.\n\n## 3. How to use it\n\nThe ordinary path, as a sequence of calls with real values. If the contract needs setup (approve a token, transfer ownership, set a parameter), show that first and in order. Someone should be able to follow this without reading the source.\n\n## 4. What it does not protect against\n\nCarry the accepted risks forward from `audit.md` and the \"not defending against\" list from `design.md`, in plain words a non-specialist understands. Admin key powers belong here, spelled out: say exactly what the owner can do to a user's funds. This is the part people most want to leave vague and most need to read.\n\n## 5. Deployment facts\n\n- Compiler version and the exact settings used, including optimizer runs and the EVM version. Anyone verifying the source needs these to reproduce the bytecode.\n- Constructor arguments, with their meaning.\n- Which chain, and whether it is a testnet.\n- Runtime size in bytes and deploy gas, from `sandbox.json`.\n\n## 6. Write it plainly\n\nNo marketing. No adjective triads. Name the thing, give the number, move on. If a sentence sounds good read aloud but carries no fact, cut it.\n",
   "90-deploy-plan": '# Deployment plan: decide everything before you spend anything\n\nDeployment is the one irreversible step. Write `deploy.md` and get every answer down before the next step touches a network.\n\n## 1. Which chain, and who said so\n\nName the chain. If the human has not chosen one, ask now. Never default to a mainnet silently, and never assume a testnet either: a contract deployed to the wrong network is a contract someone will find and use.\n\nConfirm it is alive before you rely on it:\n\n    agent-wallet chain-resolve <chain>\n    agent-wallet chain-check <chain>\n\nTestnet first is the rule. Deploy to the testnet, exercise it there, and only then propose the mainnet deployment as a separate decision the human makes with the testnet address in front of them.\n\n## 2. Constructor arguments, exactly\n\nEvery argument, its final value, and where the value came from. Addresses in full, checksummed. Amounts in base units with the decimal conversion shown. An argument you are guessing is an argument to ask about.\n\nConstructor arguments are permanent. An immutable set to the wrong address is a redeploy.\n\n## 3. Who owns it, one minute after deployment\n\n- Which address is the owner or admin at the end of the constructor.\n- Whether ownership moves after deployment, to what, and by which call.\n- If it stays with a deploying EOA, say so plainly here, because it will be in the handoff and the human should see it before rather than after.\n\n## 4. The dry run\n\nRun the deployment against the sandbox with the exact constructor arguments you are about to use on chain, on the same hardfork the target chain runs. Add a plan that deploys with the real arguments and calls the post-deploy sequence from step 3 in order:\n\n    agent-wallet sandbox-run --plan ./deploy-dryrun.json\n\nThis catches a constructor that reverts on a real argument, an ownership transfer that fails, and a size that is over the limit, all for free. A constructor revert on a real chain costs the gas and gives you nothing back.\n\n## 5. Funding and cost\n\n- The deployer address: `agent-wallet wallet-addresses --name <wallet> --family evm`.\n- Its balance: `agent-wallet balance <chain> <address>`.\n- Current fees: `agent-wallet fees <chain>`.\n- Deploy gas from `sandbox.json`, multiplied out to a cost in the chain\'s currency, plus the post-deploy calls, plus headroom.\n\nIf the balance does not cover it, stop and tell the human what to fund and by how much. This toolkit does not source gas.\n\n## 6. Verification\n\nPlan to verify the source so the code is publicly readable at the address. Sourcify is keyless; Etherscan needs a key. Record the exact compiler version, optimizer setting and EVM version from `docs.md`, because verification reproduces the bytecode and will fail on a mismatch.\n\n## 7. Post-deploy checks\n\nThe list you will run immediately after deployment, before telling anyone it is live:\n\n- Read back every constructor-set value and compare it to section 2.\n- Confirm the owner is who section 3 says.\n- Call one read function and check the answer.\n- Run one harmless write and confirm the event.\n- Confirm on the explorer that the deployed bytecode matches.\n\n## 8. Rollback\n\nThere is no rollback for a deployed contract. So write what happens if something is wrong: is there a pause, can funds be recovered, does the answer amount to "deploy a new one and tell users to move". If it is the last one, the human should know that before, not after.\n',
   "90-report": '# Report: what you found, what you proved\n\nWrite `report.md`. The reader is deciding whether to use, fix, or walk away from this contract. Give them what they need for that decision and nothing else.\n\n## 1. Summary\n\nFour lines at the top:\n\n- What was reviewed: contract name, address, chain, source version, and whether it is verified.\n- The verdict, in one sentence.\n- Counts by severity: critical, high, medium, low.\n- The one thing to do first.\n\n## 2. Scope\n\nWhat you looked at and what you did not, carried from `target.md`. Which files, which addresses, which compiler. If it is a proxy, both addresses, and which one the findings apply to. If the source could not be matched to deployed bytecode, that goes here in plain words.\n\n## 3. Findings\n\nOrdered by severity, critical first. For each:\n\n- **Title**: the outcome, not the category.\n- **Severity**, and why it is that severity. Critical means funds can be taken or permanently locked. High means funds are at risk under a plausible condition, or a privileged action is reachable by the wrong party. Medium breaks an invariant or a stated requirement without direct loss. Low is hygiene, gas, or documentation.\n- **Location**: file and line.\n- **What happens**: the concrete sequence, with who calls what in what order.\n- **Proof**: the plan file from `poc.md` and what the sandbox showed, or clearly labelled UNPROVEN with what would settle it.\n- **Fix**: the specific change, and the result of running the same plan against the fixed source.\n\n## 4. Privilege and centralization\n\nA plain-words list of what the admin address can do to user funds. This is not a finding, it is a fact users deserve, and it is usually the largest real risk in a contract that has no bugs at all. Include whether the key is an EOA, a multisig, or a timelock, and what happens if it is lost.\n\n## 5. What was tested\n\nThe sandbox coverage: which functions were exercised, which negative tests fired, which invariants were checked and held. Name them. A statement that "the contract was tested" carries no information.\n\n## 6. Limits of this review\n\nSay it exactly:\n\n- This is an automated review with sandbox proofs on an in-process EVM, not an independent professional audit and not formal verification.\n- Which classes were checked by reasoning rather than by execution.\n- What was out of scope: external protocols, off-chain components, the deployment and key management, economic modelling under adversarial market conditions.\n- If the contract holds meaningful value, an independent human audit is still the next step.\n\n## 7. Write it flat\n\nNo hedging, no softening, no adjective triads. A critical finding is stated as a critical finding. If you found nothing critical, say that plainly too, and resist inflating a low finding to look thorough. The value of this report is that its severities can be trusted.\n',
-  "95-deploy": '# Deploy: the irreversible step\n\nEverything from here touches a real chain and spends real gas. Follow `deploy.md` exactly. If any answer in it is still open, go back and close it.\n\n## Before the transaction\n\nConfirm out loud to the human, in one short message: the chain, the contract name, the constructor arguments, the deploying address, the estimated cost, and who owns the contract afterwards. If this is a mainnet, say the word mainnet and wait for them to confirm. A testnet deployment can go ahead if they already asked for it.\n\n## Deploy\n\n    agent-wallet contract-deploy <chain> --source ./contract.sol --name <ContractName> --args "arg1,arg2" --wallet <wallet>\n\nThe gate runs before signing. It is deterministic code, not a prompt, and it cannot be argued with. On `GATE_DENIED` read the reason: usually the chain is not allowed by the local policy. Fix the policy with the human\'s agreement, or use an allowed chain. Do not try to route around it.\n\nRecord the returned `address`, transaction hash, and `abi`. The ABI from the deploy result is the one to use for every later call.\n\n## Post-deploy checks\n\nRun the list from section 7 of `deploy.md`, now, before telling anyone the contract is live:\n\n    agent-wallet contract-call <chain> <address> --fn owner --abi ./abi.json\n    agent-wallet contract-call <chain> <address> --fn <getter> --args <args> --abi ./abi.json\n\nCompare every value against `deploy.md`. A mismatch means stop and investigate, not proceed and note it.\n\nIf ownership has to move, do it now and confirm it landed:\n\n    agent-wallet contract-write <chain> <address> --fn transferOwnership --args <newOwner> --abi ./abi.json --wallet <wallet> --wait\n\nA two-step transfer is not done until the new owner accepts. Say clearly whether it is pending.\n\n## Verify the source\n\n    agent-wallet contract-verify --chain-id <id> --address <address> --project-dir <dir> --contract-path <path>\n\nSourcify is keyless and the default. Verification must reproduce the exact bytecode, so the compiler version, optimizer runs and EVM version must match what `docs.md` recorded. If it fails on a mismatch, the fix is to supply the right settings, never to change the source.\n\nIf verification cannot be completed, say so plainly rather than implying the source is public when it is not.\n\n## If the deployment fails\n\n- `INSUFFICIENT_FUNDS`: report the shortfall and what to fund. Do not retry.\n- `DEPLOY_REVERTED`: the constructor reverted with real arguments. Go back to the dry run in `deploy.md` with those exact arguments and find out why. Do not retry blind; every attempt costs gas.\n- `CONFIRM_TIMEOUT`: the transaction may still land. Check with `agent-wallet tx <chain> <hash>` before doing anything else. Deploying again after a timeout can leave two contracts and a confused human.\n\n## Mainnet\n\nA mainnet deployment is a separate decision from a testnet one, made by the human, after they have seen the testnet address working. Never roll one into the other, and never treat a testnet success as authorization for mainnet.\n',
+  "95-deploy": '# Deploy: the irreversible step\n\nEverything from here touches a real chain and spends real gas. Follow `deploy.md` exactly. If any answer in it is still open, go back and close it.\n\n## Before the transaction\n\nConfirm out loud to the human, in one short message: the chain, the contract name, the constructor arguments, the deploying address, the estimated cost, and who owns the contract afterwards. If this is a mainnet, say the word mainnet and wait for them to confirm. A testnet deployment can go ahead if they already asked for it.\n\n## Deploy\n\n    agent-wallet contract-deploy <chain> --source ./contract.sol --name <ContractName> --args "arg1,arg2" --wallet <wallet>\n\nThe gate runs before signing. It is deterministic code, not a prompt, and it cannot be argued with. On `GATE_DENIED` read the reason: usually the chain is not allowed by the local policy. Fix the policy with the human\'s agreement, or use an allowed chain. Do not try to route around it.\n\nRecord the returned `address`, transaction hash, and `abi`. The ABI from the deploy result is the one to use for every later call.\n\n## Post-deploy checks\n\nRun the list from section 7 of `deploy.md`, now, before telling anyone the contract is live:\n\n    agent-wallet contract-call <chain> <address> --fn owner --abi ./abi.json\n    agent-wallet contract-call <chain> <address> --fn <getter> --args <args> --abi ./abi.json\n\nCompare every value against `deploy.md`. A mismatch means stop and investigate, not proceed and note it.\n\nIf ownership has to move, do it now and confirm it landed:\n\n    agent-wallet contract-write <chain> <address> --fn transferOwnership --args <newOwner> --abi ./abi.json --wallet <wallet> --wait\n\nA two-step transfer is not done until the new owner accepts. Say clearly whether it is pending.\n\n## Verify the source\n\n    agent-wallet contract-verify --chain-id <id> --address <address> --project-dir <dir> --contract-path <path>\n\nSourcify is keyless and the default. This verb is the one part of the toolkit that needs an external binary: it shells out to `forge`, so on `FORGE_MISSING` say the source is unverified rather than pretending otherwise. Verification must reproduce the exact bytecode, so the compiler version, optimizer runs and EVM version must match what `docs.md` recorded. If it fails on a mismatch, the fix is to supply the right settings, never to change the source.\n\nIf verification cannot be completed, say so plainly rather than implying the source is public when it is not.\n\n## If the deployment fails\n\n- `INSUFFICIENT_FUNDS`: report the shortfall and what to fund. Do not retry.\n- `DEPLOY_REVERTED`: the constructor reverted with real arguments. Go back to the dry run in `deploy.md` with those exact arguments and find out why. Do not retry blind; every attempt costs gas.\n- `CONFIRM_TIMEOUT`: the transaction may still land. Check with `agent-wallet tx <chain> <hash>` before doing anything else. Deploying again after a timeout can leave two contracts and a confused human.\n\n## Mainnet\n\nA mainnet deployment is a separate decision from a testnet one, made by the human, after they have seen the testnet address working. Never roll one into the other, and never treat a testnet success as authorization for mainnet.\n',
   "99-handoff": '# Handoff: what the human gets\n\nWrite `handoff.md`. This is the only artifact most people will read, so it carries the facts they need and none of the process.\n\n## 1. The contract\n\n- Name, chain, address.\n- Explorer link.\n- Whether the source is verified, and where.\n- Compiler version, optimizer runs, EVM version.\n- Deploy transaction hash.\n\n## 2. Who controls it\n\n- The owner or admin address right now, and whether that is an EOA, a multisig, or a timelock.\n- Exactly what that address can do, in plain words. If the owner can move user funds, pause withdrawals, or change a fee to 100 percent, write that sentence.\n- If ownership transfer is pending acceptance, say so.\n- What happens if the key is lost.\n\n## 3. How to use it\n\nThe ordinary sequence of calls with real values, from `docs.md`. Enough that someone can use the contract without reading the source.\n\n## 4. What was verified, and how\n\n- The audit verdict from `audit.md` and the date.\n- What the sandbox actually proved: how many steps, which negative tests, which invariants held. Name them; a count alone means nothing.\n- Gas and size from `gas.md`.\n\nBe exact about the strength of this evidence. The sandbox proves the paths that were tested on an in-process EVM. It is not a professional audit, it is not formal verification, and it is not a guarantee. If the contract will hold meaningful money, say that an independent human audit is the next step.\n\n## 5. Known limitations and accepted risks\n\nEvery accepted risk from `audit.md`, every item from "what it does not protect against" in `docs.md`, every open question from `spec.md` that never got answered. One line each, no softening.\n\n## 6. Files\n\nWhere everything lives: the source, the ABI, the sandbox plan, the audit. Someone re-auditing this in six months starts from that list.\n\n## Then stop\n\nReport the address and the two or three things the human must act on, and stop. The walk is complete. Do not deploy anything else, do not move funds, and do not start a mainnet deployment off the back of a testnet one unless they ask for it as its own decision.\n'
 };
 
@@ -106564,7 +106620,7 @@ function workDir() {
   return resolve5(process.cwd(), ".contract-work");
 }
 function statePath(dir) {
-  return join9(dir, "walk.json");
+  return join10(dir, "walk.json");
 }
 function readState(dir) {
   try {
@@ -106601,13 +106657,13 @@ function promptBody(step3) {
 }
 function artifactFor(step3, dir) {
   const name = MANIFEST.produces[step3];
-  return name === void 0 ? void 0 : join9(dir, name);
+  return name === void 0 ? void 0 : join10(dir, name);
 }
 function assertNotBlocked(step3, seq, dir) {
   const upto = seq.indexOf(step3);
   for (const earlier of seq.slice(0, upto)) {
     const artifact = artifactFor(earlier, dir);
-    if (artifact !== void 0 && !existsSync3(artifact)) {
+    if (artifact !== void 0 && !existsSync4(artifact)) {
       throw new CodedError(
         "WALK_BLOCKED",
         `step ${earlier} has not saved its artifact yet`,
@@ -106619,7 +106675,7 @@ function assertNotBlocked(step3, seq, dir) {
 function firstUnsatisfied(seq, dir) {
   for (const step3 of seq) {
     const artifact = artifactFor(step3, dir);
-    if (artifact !== void 0 && !existsSync3(artifact)) return step3;
+    if (artifact !== void 0 && !existsSync4(artifact)) return step3;
   }
   return seq[seq.length - 1];
 }
@@ -106704,7 +106760,7 @@ function walkStatus() {
   out.mode = state.mode;
   for (const step3 of sequenceFor(state.mode)) {
     const artifact = artifactFor(step3, dir);
-    const saved = artifact === void 0 ? true : existsSync3(artifact);
+    const saved = artifact === void 0 ? true : existsSync4(artifact);
     const row = { step: step3, visits: state.visits[step3] ?? 0, saved };
     if (artifact !== void 0) row.artifact = artifact;
     out.steps.push(row);
@@ -106746,8 +106802,8 @@ function status() {
 init_envelope();
 init_home();
 init_wallet();
-import { existsSync as existsSync4, mkdirSync as mkdirSync6, readFileSync as readFileSync8 } from "node:fs";
-import { join as join10 } from "node:path";
+import { existsSync as existsSync5, mkdirSync as mkdirSync6, readFileSync as readFileSync8 } from "node:fs";
+import { join as join11 } from "node:path";
 var LAYER10 = { layer: "agentio", backend: "init" };
 function toolkitVersion() {
   const bundled = "0.5.0";
@@ -106768,7 +106824,7 @@ function nodeMeetsFloor(version5) {
 }
 function ensureHomeLayout(home) {
   for (const sub of ["keystore", "state", "cache"]) {
-    mkdirSync6(join10(home, sub), { recursive: true, mode: 448 });
+    mkdirSync6(join11(home, sub), { recursive: true, mode: 448 });
   }
 }
 function initToolkit() {
@@ -106778,7 +106834,7 @@ function initToolkit() {
     const nodeOk = nodeMeetsFloor(node);
     const home = walletHome();
     ensureHomeLayout(home);
-    const homeOk = existsSync4(home);
+    const homeOk = existsSync5(home);
     const passphraseSet = Boolean(process.env["AGENT_WALLET_PASSPHRASE"]?.length);
     let walletCount = 0;
     try {
@@ -107227,6 +107283,24 @@ var verbs = {
           ...flags["slippage"] !== void 0 && { slippageBps: Number(flags["slippage"]) },
           ...flags["rpc"] !== void 0 && { rpc: flags["rpc"] },
           ...flags["wait"] !== void 0 && { wait: true }
+        })
+      );
+    }
+  },
+  "contract-verify": {
+    summary: "contract-verify --chain-id <id> --address 0x.. --project-dir <dir> --contract-path src/X.sol:X [--verifier sourcify|blockscout|etherscan] [--verifier-url url] [--api-key key]",
+    run: async (args) => {
+      const { flags } = parseFlags(args);
+      return emit(
+        await verify6({
+          chainId: Number(flags["chain-id"] ?? 0),
+          address: flags["address"] ?? "",
+          projectDir: flags["project-dir"] ?? ".",
+          contractPath: flags["contract-path"] ?? "",
+          ...flags["verifier"] !== void 0 && { verifier: flags["verifier"] },
+          ...flags["verifier-url"] !== void 0 && { verifierUrl: flags["verifier-url"] },
+          ...flags["api-key"] !== void 0 && { apiKey: flags["api-key"] },
+          ...flags["compiler-version"] !== void 0 && { compilerVersion: flags["compiler-version"] }
         })
       );
     }

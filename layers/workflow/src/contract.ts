@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-export const stepKey = z.string().regex(/^[0-9]{2}-[a-z0-9-]+$/);
-
 export const stepOutput = z
   .object({
     mode: z.string(),

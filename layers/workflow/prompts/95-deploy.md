@@ -33,7 +33,7 @@ A two-step transfer is not done until the new owner accepts. Say clearly whether
 
     agent-wallet contract-verify --chain-id <id> --address <address> --project-dir <dir> --contract-path <path>
 
-Sourcify is keyless and the default. Verification must reproduce the exact bytecode, so the compiler version, optimizer runs and EVM version must match what `docs.md` recorded. If it fails on a mismatch, the fix is to supply the right settings, never to change the source.
+Sourcify is keyless and the default. This verb is the one part of the toolkit that needs an external binary: it shells out to `forge`, so on `FORGE_MISSING` say the source is unverified rather than pretending otherwise. Verification must reproduce the exact bytecode, so the compiler version, optimizer runs and EVM version must match what `docs.md` recorded. If it fails on a mismatch, the fix is to supply the right settings, never to change the source.
 
 If verification cannot be completed, say so plainly rather than implying the source is public when it is not.
 

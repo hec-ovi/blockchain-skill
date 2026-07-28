@@ -52,7 +52,7 @@ Fund testnets by sending from an external wallet or a public testnet drip site. 
 | Read | balance, utxos, fees, tx | EVM + Bitcoin |
 | Send | send (native, ERC-20, BTC, sweep) | EVM + Bitcoin |
 | Swap | swap-quote, swap (CoW, Kyber, Uniswap), wrap, unwrap | EVM |
-| Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn | EVM |
+| Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn, contract-verify | EVM |
 | Solidity workflow | contract-step, sandbox-run | local |
 | Session | init, version, help | local |
 
@@ -109,7 +109,7 @@ Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"al
 
 **Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
-**Agent benchmark:** two peers on Sepolia, all 25 CLI verbs measured (see bottom of this README). Covers wallet creation, agent-to-agent payment, swap, and the full Solidity path from spec to a deployed contract that the other agent then calls.
+**Agent benchmark:** two peers on Sepolia, 25 of the 26 CLI verbs measured (see bottom of this README). Covers wallet creation, agent-to-agent payment, swap, and the full Solidity path from spec to a deployed contract that the other agent then calls.
 
 ## Architecture
 
@@ -145,7 +145,7 @@ Each agent created its own wallet from a plain request. Peer A was funded once f
 
 ### Verb coverage
 
-**25 of 25 verbs, measured.** A shim over the bundled CLI in each workspace logged every verb the models actually invoked, so this is counted, not asserted.
+**25 of the 26 verbs, measured.** A shim over the bundled CLI in each workspace logged every verb the models actually invoked, so this is counted, not asserted.
 
 ```
 init            version         wallet-create   wallet-import   wallet-list
@@ -154,6 +154,8 @@ utxos           chain-resolve   chain-check     send            wrap
 unwrap          swap-quote      swap            contract-learn  contract-compile
 contract-deploy contract-call   contract-write  contract-step   sandbox-run
 ```
+
+`contract-verify` is the one verb no agent exercised: it was wired to the CLI after this benchmark ran, and it needs the `forge` binary, which the rest of the toolkit deliberately does not.
 
 ### On-chain matrix (agent-driven)
 

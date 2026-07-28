@@ -157,7 +157,6 @@ export const schemas: Record<string, z.ZodType> = {
   "run-output": runOutput,
 };
 
-export type PlanInput = z.input<typeof planInput>;
 export type Plan = z.output<typeof planInput>;
 export type RunOutput = z.infer<typeof runOutput>;
 export type StepResult = z.infer<typeof stepResult>;
