@@ -30,9 +30,10 @@ Read `data.ready`, `data.nextActions`, `data.notes`. Do not hand-probe the insta
 
 **Passphrase** (signing verbs). Do this once, then stop touching it:
 
-1. If cwd `.env` already has `AGENT_WALLET_PASSPHRASE`, use it (CLI auto-loads `.env`). Do not invent another.
+1. If a `.env` at the project root already has `AGENT_WALLET_PASSPHRASE`, use it (CLI auto-loads `.env`). Do not invent another.
 2. Else create `.env` once with `AGENT_WALLET_PASSPHRASE=<random >=8 chars>` and `AGENT_WALLET_HOME=./.agent-wallet-data` (or keep default home). Never print the passphrase in chat.
-3. On `PASSPHRASE_WRONG`: stop. Do not brute-force, dump keystore JSON, or reverse-engineer the bundle.
+3. Run verbs from anywhere in the project: `.env` is found by walking up, so a scratch subdirectory is fine.
+4. On `PASSPHRASE_WRONG`: stop. Do not brute-force, dump keystore JSON, or reverse-engineer the bundle.
 
 Fund testnets by receiving from an external wallet or a public testnet drip site. This toolkit does not drip gas.
 
@@ -138,7 +139,7 @@ Gate is deterministic code before sign/broadcast. It cannot be talked out of a d
 - Never skip `agent-wallet init` on first use in a session.
 - Never re-bootstrap (curl/clone) when `dist/agent-wallet.mjs` is already in the skill pack.
 - Never default to mainnet silently; ask the network first.
-- Never put the passphrase in chat; use env or `.env`.
+- Never put the passphrase in chat, and never inline it on a command line (`AGENT_WALLET_PASSPHRASE=... agent-wallet ...`): it lands in transcripts and shell history. The CLI loads `.env` from the project root by itself, from any subdirectory. Write it once, then never type it again.
 - Never invent a new passphrase after `wallet-create`; one `.env` for the session/workspace.
 - Never brute-force after `PASSPHRASE_WRONG`; never `cat` keystore files to recover secrets.
 - Never `balance` with a wallet name; always an address.
