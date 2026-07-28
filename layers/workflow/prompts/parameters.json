@@ -1,0 +1,10 @@
+{
+  "SOLC_VERSION": "0.8.36",
+  "SOLC_DEFAULT_EVM": "osaka",
+  "SANDBOX_DEFAULT_FORK": "cancun",
+  "MIN_PRAGMA": "0.8.28",
+  "CODE_SIZE_LIMIT": "24576",
+  "INITCODE_SIZE_LIMIT": "49152",
+  "MAX_VISITS": "6",
+  "MIN_NEGATIVE_TESTS": "1"
+}

@@ -1,0 +1,45 @@
+{
+  "purpose": {
+    "build": "A new contract from a requirement, walked from spec to a verified deployment.",
+    "review": "Audit a contract that already exists, in source or deployed on-chain, and prove each finding.",
+    "ship": "Deploy source that has already been written and reviewed, with the pre-flight checks intact."
+  },
+  "modes": {
+    "build": [
+      "10-spec",
+      "20-threat",
+      "30-design",
+      "40-implement",
+      "45-compile",
+      "50-invariants",
+      "55-sandbox",
+      "60-audit",
+      "70-fix",
+      "80-gas",
+      "85-docs",
+      "90-deploy-plan",
+      "95-deploy",
+      "99-handoff"
+    ],
+    "review": ["10-target", "20-threat", "30-map", "60-audit", "65-poc", "90-report"],
+    "ship": ["45-compile", "60-audit", "90-deploy-plan", "95-deploy", "99-handoff"]
+  },
+  "produces": {
+    "10-spec": "spec.md",
+    "20-threat": "threat.md",
+    "30-design": "design.md",
+    "40-implement": "contract.sol",
+    "45-compile": "compile.json",
+    "50-invariants": "plan.json",
+    "55-sandbox": "sandbox.json",
+    "60-audit": "audit.md",
+    "80-gas": "gas.md",
+    "85-docs": "docs.md",
+    "90-deploy-plan": "deploy.md",
+    "99-handoff": "handoff.md",
+    "10-target": "target.md",
+    "30-map": "map.md",
+    "65-poc": "poc.md",
+    "90-report": "report.md"
+  }
+}
