@@ -4,22 +4,35 @@
     "name": "Hector Oviedo"
   },
   "metadata": {
-    "description": "Non-custodial agent wallet toolkit: CLI + agent skills for EVM and Bitcoin",
-    "version": "0.4.2"
+    "description": "Non-custodial agent wallet toolkit and Solidity contract workflow: CLI + agent skills for EVM and Bitcoin",
+    "version": "0.5.0"
   },
   "plugins": [
     {
       "name": "agent-wallet",
       "source": "./plugins/agent-wallet",
-      "description": "Non-custodial agent wallet: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain, no middleman.",
-      "version": "0.4.2",
+      "description": "Non-custodial agent wallet plus a gated Solidity workflow: create wallets, send, receive, swap, sign, and write, audit and deploy contracts across EVM and Bitcoin, straight to chain.",
+      "version": "0.5.0",
       "author": {
         "name": "Hector Oviedo"
       },
       "homepage": "https://github.com/hec-ovi/blockchain-skill",
       "repository": "https://github.com/hec-ovi/blockchain-skill",
       "license": "MIT",
-      "keywords": ["blockchain", "wallet", "non-custodial", "ethereum", "bitcoin", "evm", "solidity", "swap", "bridge", "agent-skills"]
+      "keywords": [
+        "blockchain",
+        "wallet",
+        "non-custodial",
+        "ethereum",
+        "bitcoin",
+        "evm",
+        "solidity",
+        "smart-contracts",
+        "smart-contract-audit",
+        "evm-sandbox",
+        "swap",
+        "agent-skills"
+      ]
     }
   ]
 }

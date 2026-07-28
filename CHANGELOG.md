@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- New `agent-solidity` skill: a gated contract workflow served one step at a time (`contract-step`), with modes for build, review and ship. Artifact gate refuses to advance past a step that produced nothing; loop shield stops an agent circling.
+- New `layers/sandbox`: a real EVM in the CLI process (@ethereumjs/vm v10, London through Amsterdam). `sandbox-run --plan` deploys and exercises contracts, decodes events and revert reasons including custom errors and Panic codes, measures gas, checks runtime size against EIP-170, and evaluates declared invariants. Offline and deterministic: no Foundry, no node, no funds, no install.
+- New `layers/workflow`: the step machine and its prompts, inlined into the bundle at build time (`npm run prompts`).
+- `contracts`: multi-file compile with relative import resolution and solc warnings surfaced.
+- Audit step scores ten dimensions against the EEA EthTrust Security Levels and the OWASP Smart Contract Top 10 (2026).
+
 ## 0.4.2
 
 - Gate default: mainnet allowed (set allowMainnet false to lock).

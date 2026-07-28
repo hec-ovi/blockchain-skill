@@ -80,6 +80,17 @@ Update 2026-07-26: the MCP face was discontinued in v0.2.0 (the CLI and the skil
 - Nobody ships the full combo (local keys + swap + bridge + Solidity deploy across EVM and Bitcoin as MCP + CLI + skill). Closest: strangelove-ventures/web3-mcp (multi-chain incl. Bitcoin UTXO + THORChain swaps, abandoned 2025-03), mcpdotdirect/evm-mcp-server (EVM transfers/writes, active, no swap/bridge/deploy), Coinbase Agentic Wallets (polished but keys live in Coinbase TEE), thirdweb (custodial-leaning Engine wallets), GOAT SDK (archived). Foundry MCPs exist separately (PraneshASP/foundry-mcp-server).
 - Gaps this project fills: Bitcoin UTXO spend with local keys, sign + swap + bridge in one local-key server, Solidity deploy integrated with the wallet, and non-custodial MCP + CLI + skill packaging.
 
+## 9. Contract workflow stack (verified 2026-07-28)
+
+Follow-up research for the `agent-solidity` skill. The constraint was: an agent must be able to write, execute and audit a contract with nothing installed beyond Node.
+
+- **Compiler.** solc 0.8.36 (2026-07-09) is current. It adds support for the upcoming Amsterdam EVM version and removes the experimental EOF backend. Default `evmVersion` is `osaka`, which matters: bytecode built for the default hits an invalid opcode on an older VM, so the sandbox compiles for the fork it executes. 0.8.35 (2026-04-29) added the `erc7201` builtin for namespaced storage and started warning on identifiers reserved for 0.9.0 (`at`, `error`, `layout`, `leave`, `super`, `this`, `transient`). Source: soliditylang.org release announcements, ethereum/solidity releases.
+- **Local execution.** @ethereumjs/vm v10.1.2: hardforks through Osaka with Amsterdam in development, tree-shakeable, WASM-free, ~170KB gzipped, no native module. Chosen over requiring anvil or a Hardhat network because it bundles into the single-file CLI and runs offline. `RPCStateManager` also allows forking live state, left out of v1 to keep the layer deterministic and network-free.
+- **Determinism.** Account keys derive from `keccak256("agent-wallet/sandbox/<name>")`, the block is fixed, and base fee and gas price are zero. Gas is metered and reported but never deducted, so balance assertions stay exact and the same plan reproduces on any machine.
+- **Audit rule set.** EEA EthTrust Security Levels ([S], [M], [Q] plus good practices) as the auditable checklist, and the OWASP Smart Contract Top 10 (2026) for severity ordering. The 2026 picture has moved: access control is SC01 and the largest single source of loss, business logic SC02, oracle manipulation SC03; reentrancy has fallen to SC08. The workflow's ten audit dimensions map onto both. Sources: entethalliance.org/specs/ethtrust-sl/v2/checklist.html, scs.owasp.org/sctop10.
+- **No library fetching.** Imports resolve only among the sources handed to the compiler. OpenZeppelin 5.6.1 is current but pulling it would mean a network fetch or an npm install, so the workflow requires self-contained contracts and says so in the design step.
+- **Context engineering.** Progressive disclosure: the skill body is the entry point, and a step body loads only when the walk reaches it, so a contract job never carries the whole playbook at once. The artifact gate makes the discipline structural rather than advisory, which is what makes it hold on smaller models.
+
 ## Open questions
 
 - Sepolia successor naming/launch (watch ethereum-magicians thread; re-check before hardcoding testnet defaults long-term).

@@ -84,4 +84,41 @@ ok "safety-rule + lean-size scan done"
 [ -f dist/vendor/node_modules/solc/index.js ] || err "dist/vendor solc missing (run npm run build)"
 ok "launcher + bundle present"
 
+# 8. The Solidity workflow skill (second fat skill, same discipline)
+SOL_ROOT=skills/agent-solidity/SKILL.md
+SOL_COPIES=(plugins/agent-wallet/skills/agent-solidity/SKILL.md plugins/agent-wallet-codex/skills/agent-solidity/SKILL.md)
+SOL_ALL=("$SOL_ROOT" "${SOL_COPIES[@]}")
+
+for f in "${SOL_COPIES[@]}"; do
+  if cmp -s "$SOL_ROOT" "$f"; then ok "$f identical to $SOL_ROOT"; else err "$f differs from $SOL_ROOT"; fi
+done
+
+for f in "${SOL_ALL[@]}"; do
+  head -4 "$f" | grep -q '^name: agent-solidity$' || err "$f frontmatter missing 'name: agent-solidity'"
+  head -4 "$f" | grep -qi 'trigger' || err "$f description missing trigger wording"
+  if grep -qP '[\x{2013}\x{2014}]' "$f"; then err "$f contains em/en dash"; fi
+  for s in "## Start here" "## When to use which" "## Commands" "## Safety" "## Anti-patterns"; do
+    grep -qF "$s" "$f" || err "$f missing: $s"
+  done
+  # The workflow is the entry point, and the toolkit needs nothing installed.
+  grep -qF 'agent-wallet contract-step' "$f" || err "$f lost the contract-step entry"
+  grep -qF 'sandbox-run' "$f" || err "$f lost sandbox-run"
+  grep -qF 'no npm install' "$f" || err "$f lost the no-install claim"
+  grep -qiF 'never default to mainnet silently' "$f" || err "$f lost the ask-the-network rule"
+  grep -qF 'It cannot be talked out of a decision' "$f" || err "$f lost the deterministic-gate rule"
+  grep -qF 'not an independent professional audit' "$f" || err "$f lost the audit-limits disclaimer"
+  grep -qF 'Fix the contract' "$f" || err "$f lost the fix-the-contract-not-the-test rule"
+  grep -qF 'Never install Foundry' "$f" || err "$f lost the no-toolchain rule"
+  lines=$(wc -l < "$f")
+  [ "$lines" -lt 220 ] || err "$f too long ($lines lines); keep the skill lean"
+done
+ok "agent-solidity skill scan done"
+
+# 9. The workflow prompts are the fat half of that skill; they must stay in sync
+[ -f layers/workflow/src/prompts.generated.ts ] || err "prompts.generated.ts missing (run npm run prompts)"
+for f in layers/workflow/prompts/*.md; do
+  if grep -qP '[\x{2013}\x{2014}]' "$f"; then err "$f contains em/en dash"; fi
+done
+ok "workflow prompt scan done"
+
 if [ "$fail" = 0 ]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; exit 1; fi

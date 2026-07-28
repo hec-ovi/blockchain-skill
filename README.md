@@ -2,7 +2,9 @@
 
 Toolkit that lets any AI agent operate a wallet directly on-chain: create wallets, receive, send, swap, wrap, sign, deploy and verify Solidity contracts, and learn how deployed contracts work. Keys are generated and stored on your own machine (encrypted keystore v3), and transactions go straight to public RPC endpoints. No MetaMask, no exchange, no custodial anything.
 
-Two faces over one engine: a self-contained CLI (`agent-wallet <verb>`) and one fat agent skill replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs). Same verbs, same JSON envelope everywhere.
+Two faces over one engine: a self-contained CLI (`agent-wallet <verb>`) and fat agent skills replicated to every discovery convention (repo root, `skills/`, Claude and Codex plugin dirs). Same verbs, same JSON envelope everywhere.
+
+Two skills ship in the pack. `agent-wallet` is the wallet and chain surface below. `agent-solidity` is a gated workflow for writing and auditing contracts, with a local EVM to prove them on. See [Solidity workflow](#solidity-workflow).
 
 ## Install
 
@@ -51,9 +53,49 @@ Fund testnets by sending from an external wallet or a public testnet drip site. 
 | Send | send (native, ERC-20, BTC, sweep) | EVM + Bitcoin |
 | Swap | swap-quote, swap (CoW, Kyber, Uniswap), wrap, unwrap | EVM |
 | Contracts | contract-compile, contract-deploy, contract-call, contract-write, contract-learn | EVM |
+| Solidity workflow | contract-step, sandbox-run | local |
 | Session | init, version, help | local |
 
 Every default backend is keyless. Optional Etherscan key only raises contract-learn limits.
+
+## Solidity workflow
+
+Deployed code is immutable and holds money, so contract work runs as a walk that is handed to the agent one step at a time and refuses to advance until the current step has produced a file.
+
+```
+agent-wallet contract-step                    # the mode picker
+agent-wallet contract-step --mode build       # spec, threat model, design, implement,
+                                              # compile, test plan, sandbox, audit gate,
+                                              # fix, gas, docs, deploy plan, deploy, handoff
+agent-wallet contract-step --mode review      # audit existing source or an on-chain address
+agent-wallet contract-step --mode ship        # deploy already-reviewed source
+agent-wallet contract-step --status           # where the walk stands, what blocks it
+```
+
+Artifacts land in `./.contract-work`. Skipping a step returns `WALK_BLOCKED` naming the step you owe; circling one step six times returns `WALK_LOOPING` and tells the agent to hand back to the human. Step bodies live in `layers/workflow/prompts/` and are inlined into the bundle at build time, so they load one at a time rather than all at once.
+
+`sandbox-run` is a real EVM inside the CLI process (`@ethereumjs/vm` v10, hardforks through Amsterdam). It compiles with solc 0.8.36, deploys, sends transactions from named accounts, decodes events and revert reasons (custom errors by name, `Panic` codes with their meaning), measures gas, reports runtime size against the EIP-170 limit, and checks invariants you declare.
+
+```
+agent-wallet sandbox-run --plan ./plan.json
+```
+
+```json
+{
+  "accounts": { "alice": "10 ether", "mallory": "5 ether" },
+  "sources": [{ "path": "Vault.sol", "file": "contract.sol" }],
+  "deploy": [{ "as": "vault", "contract": "Vault", "from": "deployer" }],
+  "steps": [
+    { "to": "vault", "from": "alice", "fn": "deposit", "value": "2 ether" },
+    { "to": "vault", "from": "mallory", "fn": "sweep", "expect": "revert", "revert": "NotOwner" }
+  ],
+  "invariants": [{ "name": "solvency", "to": "vault", "fn": "totalHeld", "op": "gte", "value": "2 ether" }]
+}
+```
+
+No Foundry, no Hardhat, no anvil, no node, no testnet funds, no `npm install`. It is deterministic (fixed block, zero base fee, keys derived from account names), so a failure reproduces and a pass is evidence. Gas is metered but never deducted, which keeps balance assertions exact.
+
+The audit step scores ten dimensions against the EEA EthTrust Security Levels and the OWASP Smart Contract Top 10 (2026), and gates on all ten passing with no critical or high finding open. It is an automated review with runnable proofs, not an independent professional audit.
 
 ## Safety
 
@@ -63,15 +105,17 @@ Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"al
 
 **Automated suite.** `npm test` builds the bundle, then runs contract tests for every layer, BIP-86/BIP-84 vectors, coin selection, envelope validation, real CLI e2e (source + bundle), and `tests/check_skill.sh` (skill copies byte-identical, versions lockstep, launcher + `dist/agent-wallet.mjs` present).
 
+**Sandbox ground truth.** The fixture pair is a deliberately reentrant `Vault` and its `Attacker`. The suite asserts the exploit actually drains the vault (attacker deposits 1 ETH, walks away with 3, invariant breaks) and that the checks-effects-interactions version stops the same plan unchanged. It runs on every advertised hardfork from London to Osaka.
+
 **Live public-network checks** (opt in with `RUN_LIVE=1`): Sepolia and Bitcoin signet reads, Sourcify ABI fetch, CoW / Kyber quotes.
 
-**Agent benchmark:** dual noob peers on Sepolia with a local mid-size model (see bottom of this README).
+**Agent benchmark:** dual noob peers on Sepolia with a local mid-size model (see bottom of this README). Solidity authoring and deploy were out of scope for that run, and the contract workflow has not yet been benchmarked against a live agent.
 
 ## Architecture
 
 Layers under `layers/` each own `CONTRACT.md`, `schema/`, `src/`, and `tests/`. Cross-layer TypeScript imports are limited to published modules (import-boundary test); the CLI composition root is `agentio`. Outbound agent I/O is one JSON envelope. See `docs/ARCHITECTURE.md` and `docs/INDEX.md`.
 
-Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, agentio (CLI + init).
+Layer order: core, keys, chains, read, sign, gate, send, learn, contracts, swap, sandbox, workflow, agentio (CLI + init).
 
 Release artifact: `npm run build` writes `dist/agent-wallet.mjs` (single Node ESM file). Skill installs and the package ship that file so agents need only Node.
 

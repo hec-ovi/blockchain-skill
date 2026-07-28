@@ -1,7 +1,7 @@
 {
   "name": "agent-wallet-codex",
-  "version": "0.4.2",
-  "description": "Non-custodial agent wallet toolkit: create wallets, send, receive, swap, bridge, sign, and deploy Solidity contracts across EVM and Bitcoin, straight to chain.",
+  "version": "0.5.0",
+  "description": "Non-custodial agent wallet toolkit plus a gated Solidity workflow: wallets, send, receive, swap, sign, and write, audit and deploy contracts across EVM and Bitcoin, straight to chain.",
   "author": {
     "name": "Hector Oviedo",
     "url": "https://github.com/hec-ovi"
@@ -17,13 +17,16 @@
     "bitcoin",
     "evm",
     "solidity",
+    "smart-contracts",
+    "smart-contract-audit",
+    "evm-sandbox",
     "agent-skills"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Agent Wallet",
-    "shortDescription": "Non-custodial on-chain wallet for agents (EVM and Bitcoin)",
-    "longDescription": "Create and import wallets, check balances, send native coin, ERC-20 and BTC, swap via DEX aggregators, bridge across chains, and author, deploy, verify, call, or write Solidity contracts. Keys stay on your machine, encrypted; transactions go straight to public RPC endpoints. Mainnet is denied until explicitly allowed.",
+    "shortDescription": "Non-custodial on-chain wallet and Solidity workflow for agents",
+    "longDescription": "Create and import wallets, check balances, send native coin, ERC-20 and BTC, swap via DEX aggregators, and run a gated Solidity workflow that walks spec, threat model, design, implementation, an in-process EVM proof, a security audit and deployment. Keys stay on your machine, encrypted; transactions go straight to public RPC endpoints. The contract sandbox needs no Foundry, no node and no funds.",
     "developerName": "Hector Oviedo",
     "category": "Productivity",
     "capabilities": [
@@ -33,7 +36,8 @@
     ],
     "websiteURL": "https://github.com/hec-ovi/blockchain-skill",
     "defaultPrompt": [
-      "Use the agent-wallet skill to create a wallet, check a balance, or send funds on-chain."
+      "Use the agent-wallet skill to create a wallet, check a balance, or send funds on-chain.",
+      "Use the agent-solidity skill to write, audit or deploy a smart contract."
     ],
     "screenshots": [],
     "brandColor": "#3C3C3C"

@@ -33,11 +33,17 @@ describe("distribution: skills present and well-formed", () => {
   const skillsDir = join(root, "skills");
   const skills = readdirSync(skillsDir).filter((d) => existsSync(join(skillsDir, d, "SKILL.md")));
 
-  it("ships the single fat skill at root, in skills/, and in both plugin dirs", () => {
-    expect(skills).toEqual(["agent-wallet"]);
+  it("ships both fat skills, replicated to every discovery convention", () => {
+    expect(skills).toEqual(["agent-solidity", "agent-wallet"]);
+    // agent-wallet is canonical at the repo root (installers that read one file).
     for (const p of ["SKILL.md", "plugins/agent-wallet/skills/agent-wallet/SKILL.md", "plugins/agent-wallet-codex/skills/agent-wallet/SKILL.md"]) {
       expect(existsSync(join(root, p)), `${p} missing`).toBe(true);
       expect(read(p)).toBe(read("SKILL.md"));
+    }
+    // agent-solidity is canonical under skills/ and copied into both plugins.
+    for (const p of ["plugins/agent-wallet/skills/agent-solidity/SKILL.md", "plugins/agent-wallet-codex/skills/agent-solidity/SKILL.md"]) {
+      expect(existsSync(join(root, p)), `${p} missing`).toBe(true);
+      expect(read(p)).toBe(read("skills/agent-solidity/SKILL.md"));
     }
   });
 

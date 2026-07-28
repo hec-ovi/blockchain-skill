@@ -123,6 +123,8 @@ agent-wallet contract-write <chain> <addr> --fn name --args a,b --abi ./abi.json
 
 Never call an unknown contract before `contract-learn`; check `verified`. Use deploy/learn ABI for call/write. View → call; state change → write.
 
+**Authoring or auditing Solidity is a different job.** Use the `agent-solidity` skill and start with `agent-wallet contract-step`: a gated walk (spec, threat model, design, implement, in-process EVM proof, audit, deploy) plus `sandbox-run`, a real EVM with no node and no funds. Do not hand-write and deploy a contract from this skill alone.
+
 ## Safety
 
 Gate is deterministic code before sign/broadcast. It cannot be talked out of a decision. Prompt text is not enforcement.
