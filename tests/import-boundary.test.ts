@@ -26,8 +26,10 @@ const PUBLISHED: Record<string, ReadonlySet<string>> = {
   gate: new Set(["api", "policy", "contract"]),
   send: new Set(["api", "contract"]),
   learn: new Set(["api", "contract"]),
-  contracts: new Set(["api", "contract"]),
+  contracts: new Set(["api", "contract", "compile"]),
   swap: new Set(["api", "contract", "port", "wrap"]),
+  sandbox: new Set(["api", "contract"]),
+  workflow: new Set(["api", "contract"]),
   agentio: new Set(["cli", "init"]),
 };
 

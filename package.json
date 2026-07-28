@@ -1,7 +1,7 @@
 {
   "name": "agent-wallet-skill",
-  "version": "0.4.2",
-  "description": "Non-custodial agent wallet toolkit: CLI + agent skills. Create wallets, send, receive, swap, wrap, sign, deploy and verify Solidity contracts. EVM and Bitcoin, local keys, no middleman.",
+  "version": "0.5.0",
+  "description": "Non-custodial agent wallet toolkit: CLI + agent skills. Wallets, send, swap, wrap, sign, plus a gated Solidity workflow with an in-process EVM sandbox. EVM and Bitcoin, local keys, no middleman.",
   "type": "module",
   "license": "MIT",
   "author": "Hector Oviedo",
@@ -30,8 +30,9 @@
     ".env.example"
   ],
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "pretest": "node scripts/build.mjs",
+    "build": "npm run prompts && node scripts/build.mjs",
+    "prompts": "node --experimental-strip-types scripts/export-prompts.ts",
+    "pretest": "npm run build",
     "test": "vitest run && bash tests/check_skill.sh",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -49,9 +50,18 @@
     "evm",
     "solidity",
     "ai-agents",
-    "agent-wallet"
+    "agent-wallet",
+    "smart-contracts",
+    "evm-sandbox",
+    "smart-contract-audit"
   ],
   "dependencies": {
+    "@ethereumjs/block": "^10.1.2",
+    "@ethereumjs/common": "^10.1.2",
+    "@ethereumjs/statemanager": "^10.1.2",
+    "@ethereumjs/tx": "^10.1.2",
+    "@ethereumjs/util": "^10.1.2",
+    "@ethereumjs/vm": "^10.1.2",
     "@scure/bip32": "^2.0.0",
     "@scure/bip39": "^2.0.0",
     "@scure/btc-signer": "^2.0.0",

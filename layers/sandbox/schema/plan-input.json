@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hardfork": {
+      "default": "cancun",
+      "type": "string",
+      "enum": [
+        "london",
+        "paris",
+        "shanghai",
+        "cancun",
+        "prague",
+        "osaka",
+        "amsterdam"
+      ]
+    },
+    "accounts": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "sources": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deploy": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "as": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "contract": {
+            "type": "string",
+            "minLength": 1
+          },
+          "from": {
+            "default": "deployer",
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "args": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "value": {
+            "default": "0",
+            "type": "string"
+          }
+        },
+        "required": [
+          "as",
+          "contract",
+          "from",
+          "args",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "steps": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "from": {
+            "default": "deployer",
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "fn": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "value": {
+            "default": "0",
+            "type": "string"
+          },
+          "kind": {
+            "default": "auto",
+            "type": "string",
+            "enum": [
+              "auto",
+              "call",
+              "send"
+            ]
+          },
+          "expect": {
+            "default": "ok",
+            "type": "string",
+            "enum": [
+              "ok",
+              "revert"
+            ]
+          },
+          "revert": {
+            "type": "string"
+          },
+          "returns": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "from",
+          "fn",
+          "args",
+          "value",
+          "kind",
+          "expect"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "invariants": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "fn": {
+            "type": "string"
+          },
+          "args": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "balanceOf": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "op": {
+            "default": "eq",
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "lt",
+              "lte",
+              "gt",
+              "gte"
+            ]
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "args",
+          "op",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "optimize": {
+      "default": true,
+      "type": "boolean"
+    },
+    "gasLimit": {
+      "default": "30000000",
+      "type": "string"
+    }
+  },
+  "required": [
+    "hardfork",
+    "accounts",
+    "sources",
+    "deploy",
+    "steps",
+    "invariants",
+    "optimize",
+    "gasLimit"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    }
+  },
+  "$id": "https://github.com/hec-ovi/blockchain-skill/layers/sandbox/schema/plan-input.json"
+}

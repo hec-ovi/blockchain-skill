@@ -86,6 +86,11 @@ await esbuild.build({
   outfile,
   logLevel: "info",
   plugins: [stubPlugin],
+  // Some transitive CJS deps (debug, via @ethereumjs/*) call require() for node
+  // builtins at load time. ESM output has no require, so give it a real one.
+  banner: {
+    js: "import { createRequire as __agentWalletCreateRequire } from 'node:module';\nconst require = __agentWalletCreateRequire(import.meta.url);",
+  },
   define: {
     "process.env.AGENT_WALLET_BUNDLED_VERSION": JSON.stringify(pkg.version),
   },
