@@ -43,12 +43,14 @@ Only signing verbs need `AGENT_WALLET_PASSPHRASE` (see the `agent-wallet` skill)
 | Source already written and reviewed, just deploy it | `ship` |
 
 ```
-agent-wallet contract-step --mode build          # start (wipes the work dir)
-agent-wallet contract-step --mode build --step 45-compile   # resume or loop back
+agent-wallet contract-step --mode build          # start, or resume where you left off
+agent-wallet contract-step --mode build --step 45-compile   # jump to a step, or loop back
 agent-wallet contract-step --list                # every mode and its steps
 agent-wallet contract-step --status              # where the walk stands, what blocks it
-agent-wallet contract-step --mode build --reset  # start over
+agent-wallet contract-step --mode build --reset  # throw the walk away and start over
 ```
+
+A walk survives being interrupted. Re-running `--mode <mode>` picks up at the first step that has not saved its artifact, so a long contract job can span several sessions. Only `--reset` discards work.
 
 Artifacts land in `./.contract-work` (override with `AGENT_CONTRACT_WORK`). `WALK_BLOCKED` means an earlier step never saved its file: go do that step. `WALK_LOOPING` means you have circled six times: stop and tell the human what keeps failing.
 

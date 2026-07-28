@@ -88,6 +88,19 @@ function assertNotBlocked(step: string, seq: string[], dir: string): void {
   }
 }
 
+/**
+ * The earliest step in the sequence whose artifact is still missing, which is
+ * where a resumed walk picks up. Falls back to the last step when every
+ * producing step is satisfied (the tail of the walk produces nothing).
+ */
+function firstUnsatisfied(seq: string[], dir: string): string {
+  for (const step of seq) {
+    const artifact = artifactFor(step, dir);
+    if (artifact !== undefined && !existsSync(artifact)) return step;
+  }
+  return seq[seq.length - 1]!;
+}
+
 export interface ServeOptions {
   mode?: string;
   step?: string;
@@ -118,16 +131,19 @@ export function serveStep(opts: ServeOptions = {}): StepOutput {
 
   const mode = opts.mode;
   const seq = sequenceFor(mode);
-  const fresh = !opts.step;
+  const existing = readState(dir);
+  // A walk already under way in this mode is RESUMED, never wiped. An agent
+  // told to "finish the walk" reaches for `--mode <mode>`, and that used to
+  // destroy every artifact it had already produced. Starting over is a
+  // deliberate act: --reset.
+  const resuming = !opts.reset && !opts.step && existing !== undefined && existing.mode === mode;
 
-  if (opts.reset || fresh) {
-    // Starting a mode with no explicit step means a new piece of work; the
-    // previous walk's artifacts must not leak into this one.
+  if (opts.reset || (!opts.step && !resuming)) {
     rmSync(dir, { recursive: true, force: true });
   }
   mkdirSync(dir, { recursive: true });
 
-  const step = opts.step ?? seq[0]!;
+  const step = opts.step ?? (resuming ? firstUnsatisfied(seq, dir) : seq[0]!);
   const index = seq.indexOf(step);
   if (index < 0) {
     throw new CodedError(

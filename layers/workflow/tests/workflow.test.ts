@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -78,12 +78,34 @@ describe("workflow: one step at a time", () => {
     expect(blown.error?.hint).toContain("Report to the human");
   });
 
-  it("clears the work dir when a mode is started fresh", async () => {
+  it("resumes an in-progress walk instead of wiping it", async () => {
+    // An agent told to "finish the walk" reaches for --mode, and that must not
+    // destroy the artifacts it already produced.
+    await step({ mode: "build" });
+    writeFileSync(join(work, "spec.md"), "# spec\n");
+    writeFileSync(join(work, "threat.md"), "# threat\n");
+
+    const env = await step({ mode: "build" });
+    const data = stepOutput.parse(env.data);
+    expect(data.step).toBe("30-design");
+    expect(readFileSync(join(work, "spec.md"), "utf8")).toBe("# spec\n");
+  });
+
+  it("clears the work dir on an explicit reset", async () => {
     await step({ mode: "build" });
     writeFileSync(join(work, "spec.md"), "stale\n");
-    await step({ mode: "build" });
+    await step({ mode: "build", reset: true });
+    expect(existsSync(join(work, "spec.md"))).toBe(false);
     const env = await step({ mode: "build", step: "20-threat" });
     expect(env.error?.code).toBe("WALK_BLOCKED");
+  });
+
+  it("starts fresh when the previous walk was a different mode", async () => {
+    await step({ mode: "build" });
+    writeFileSync(join(work, "spec.md"), "from a build walk\n");
+    const env = await step({ mode: "review" });
+    expect(stepOutput.parse(env.data).step).toBe("10-target");
+    expect(existsSync(join(work, "spec.md"))).toBe(false);
   });
 
   it("keeps the walk when resuming a specific step", async () => {

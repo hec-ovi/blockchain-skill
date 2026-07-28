@@ -106616,6 +106616,13 @@ function assertNotBlocked(step3, seq, dir) {
     }
   }
 }
+function firstUnsatisfied(seq, dir) {
+  for (const step3 of seq) {
+    const artifact = artifactFor(step3, dir);
+    if (artifact !== void 0 && !existsSync3(artifact)) return step3;
+  }
+  return seq[seq.length - 1];
+}
 function serveStep(opts = {}) {
   const dir = workDir();
   if (!opts.mode) {
@@ -106636,12 +106643,13 @@ function serveStep(opts = {}) {
   }
   const mode2 = opts.mode;
   const seq = sequenceFor(mode2);
-  const fresh = !opts.step;
-  if (opts.reset || fresh) {
+  const existing = readState(dir);
+  const resuming = !opts.reset && !opts.step && existing !== void 0 && existing.mode === mode2;
+  if (opts.reset || !opts.step && !resuming) {
     rmSync2(dir, { recursive: true, force: true });
   }
   mkdirSync5(dir, { recursive: true });
-  const step3 = opts.step ?? seq[0];
+  const step3 = opts.step ?? (resuming ? firstUnsatisfied(seq, dir) : seq[0]);
   const index2 = seq.indexOf(step3);
   if (index2 < 0) {
     throw new CodedError(

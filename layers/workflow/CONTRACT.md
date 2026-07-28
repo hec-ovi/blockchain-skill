@@ -8,7 +8,7 @@ Hand an agent the Solidity contract walk one step at a time, and refuse to advan
 
 ## Inputs
 
-- step: `{mode?, step?, reset?}`. No mode serves the picker (`00-mode`). A mode with no step starts that mode fresh and wipes the work dir. A mode with a step serves that node. `reset` wipes the work dir first.
+- step: `{mode?, step?, reset?}`. No mode serves the picker (`00-mode`). A mode with no step resumes an in-progress walk of that mode at its first unsatisfied step, or starts fresh when there is none (or when the previous walk was a different mode). A mode with a step serves that node. `reset` is the only way to discard a walk in progress.
   - Precondition: `mode` is a key of the manifest; `step` belongs to that mode's sequence.
 - modes: no input.
 - status: no input.
@@ -43,7 +43,7 @@ None.
 - `layers/workflow/prompts/*.md` is the single source of truth. `src/prompts.generated.ts` is written from it by `npm run prompts` and is the only thing the code reads, so the bundle stays a single file with no sidecar prompt directory. A test fails when the two drift.
 - Every step named by a mode has a prompt file, and every prompt file is used by a mode. No orphans in either direction.
 - `{{PARAM}}` placeholders are substituted from `prompts/parameters.json` before a body is served, so compiler versions and size limits stay accurate in one place.
-- Starting a mode with no explicit step wipes the work dir, so a previous contract's artifacts cannot satisfy this one's gate.
+- A walk in progress is never destroyed implicitly. `--mode <mode>` with no step resumes it, because that is what an agent told to "finish the walk" reaches for; only `--reset`, or switching to a different mode, clears the work dir.
 
 ## How to modify this blackbox safely
 
