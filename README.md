@@ -97,6 +97,28 @@ No Foundry, no Hardhat, no anvil, no node, no testnet funds, no `npm install`. I
 
 The audit step scores ten dimensions against the EEA EthTrust Security Levels and the OWASP Smart Contract Top 10 (2026), and gates on all ten passing with no critical or high finding open. It is an automated review with runnable proofs, not an independent professional audit.
 
+## What the workflow does not fix
+
+### The model is the limit, not the walk
+
+Solidity punishes small errors in a way most code does not. The bytecode is public, immutable, holds money, and anyone on earth can call it. There is no patch release and no rollback, so a defect that would be a Monday morning ticket in a web service is a permanent loss here.
+
+Frontier models get this wrong too. The walk narrows where a mistake can hide: it forces a threat model before any code exists, an executable proof before an audit, and an audit before anything reaches a chain. What it cannot do is turn a weak model into a competent Solidity engineer. It makes the mistakes surface earlier, cheaper, and in a place where a person can see them.
+
+The visible failures in our own benchmark were the easy kind. The 35B wrote `indexed` on a custom error, which Solidity rejects, and the compiler caught it. It deployed twice and reported once, which the chain showed. The failures that matter are the ones that compile, pass the sandbox, and read well in the audit, because nothing in the pipeline is looking for them.
+
+So: with a local model, treat the output as a draft for a human to review, not as a finished contract. The audit step reports PASS when ten dimensions pass and no critical or high finding is open. That is an automated review with runnable proofs. It is not an independent audit, it is not formal verification, and it should not be the last thing that happens before real money is involved.
+
+### Why small models loop, and why that is not the gate's fault
+
+Small models circle. Ours hit the 50-round cap twice at the same step, re-served a step instead of advancing, and at one point saved an artifact that satisfied a gate without doing the work the gate was standing in for. It is tempting to read this as the workflow trapping the agent. It is the opposite. The gate is deterministic code that asks one question, does the file exist, and a model that keeps arriving without the file is failing to plan rather than being blocked.
+
+The point of the artifact gate, the visit cap and the one-step-at-a-time serving is to convert an invisible failure into a visible stop. `WALK_LOOPING` is not an error in the toolkit; it is the walk refusing to let an agent burn an afternoon in a circle and handing the problem back to a person. A pipeline without those checks does not loop less, it loops silently.
+
+There is a subtler failure the gates cannot catch. A model handed a rich prompt will produce the shape that prompt asks for, whether or not the content behind it is real. A five kilobyte threat model that lists every attack class without applying one of them to the contract in front of it looks exactly like a five kilobyte threat model that did the work. The gates check that an artifact exists, not that it is good. Only two things in the walk check substance: the compiler, which rejects code that is wrong, and the sandbox, which runs an exploit and reports whether it drained the contract. Those two carry far more weight than any of the prose steps, and a reviewer should weight them the same way.
+
+One consequence for anyone measuring this. We changed the skill three times during a single benchmark, and each change moved the agents' behaviour. Numbers collected while the prompts are being tuned describe the tuning, not the skill. Freeze the flow, then measure it, then change it. Doing all three at once produces results that cannot be compared to anything, including themselves.
+
 ## Safety
 
 Mainnet and testnets are allowed by default. To lock mainnets, set `{"gate":{"allowMainnet":false}}` in `~/.agent-wallet/config.json` (optional per-chain allowlist and per-tx caps). Every state-changing operation still passes the gate before sign; reads are never gated.
@@ -184,7 +206,7 @@ From `"make a contract that has a ping function, deploy it on sepolia"` and noth
 
 Deployed contracts were checked independently rather than taken from the agent's report: runtime bytecode recompiled and compared byte for byte (metadata stripped), every ABI selector confirmed present in the deployed code, `owner()` read back, and a live `ping()` write landed.
 
-### What this run cost, honestly
+### What this run cost
 
 The wallet surface is quick: 20s to create a wallet, 50s to send, 137s to wrap and swap, 48s to unwrap. The whole two-peer wallet and swap sequence was 27 minutes.
 

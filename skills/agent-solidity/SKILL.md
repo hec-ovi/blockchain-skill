@@ -104,6 +104,7 @@ solc 0.8.36, in process. Imports resolve only among the sources you pass: no npm
 - Deployment is irreversible. Constructor arguments are permanent. Confirm chain, arguments, deployer, cost and post-deploy owner with the human before the transaction.
 - Say plainly what the admin key can do to user funds. Every time.
 - This walk plus the sandbox is an automated review, not an independent professional audit and not formal verification. Say so in the handoff, and say an independent audit is the next step when real money is involved.
+- The walk narrows where a mistake can hide; it does not make a model good at Solidity. Only the compiler and the sandbox check substance. Every prose step can be satisfied by text that looks right, so weight a passing sandbox above a confident audit.
 
 ## Anti-patterns
 
